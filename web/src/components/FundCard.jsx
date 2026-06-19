@@ -1,4 +1,5 @@
 import { money, percent, plClass, cleanName } from '../lib/format'
+import { getDesc } from '../lib/descriptions'
 import { colorFor } from '../lib/palette'
 
 // A managed fund (e.g. Syfe Core Equity100): one cost/gain at the fund level, with its
@@ -40,14 +41,16 @@ export default function FundCard({ fund, members, ccy, fx }) {
             {rows.map((p) => {
               const w = fund.value ? (p.value_base / fund.value) * 100 : 0
               const code = (p.label.match(/\(([^)]+)\)\s*$/) || [])[1] || ''
+              const desc = getDesc(p.ticker)
               return (
-                <tr key={p.ticker} className="border-b border-white/5 last:border-0">
+                <tr key={p.ticker} className="border-b border-white/5 align-top last:border-0">
                   <td className="px-2 py-2">
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: colorFor(p.asset_class) }} />
                       <span className="truncate text-slate-200">{cleanName(p.label)}</span>
                       {code && <span className="shrink-0 text-xs text-slate-500">{code}</span>}
                     </div>
+                    {desc && <div className="mt-0.5 max-w-md text-xs text-slate-500">{desc}</div>}
                   </td>
                   <td className="px-2 py-2 text-right tnum text-slate-400">{w.toFixed(1)}%</td>
                   <td className="px-2 py-2 text-right tnum text-slate-200">{money(p.value_base, ccy, fx)}</td>
