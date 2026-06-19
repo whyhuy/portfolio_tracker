@@ -20,17 +20,20 @@ Local git is already initialised and committed on `main` (`.env` is gitignored �
 - **No secrets required** (crypto is entered manually; prices/FX are keyless).
 - After pushing: repo → **Actions** tab → enable workflows → open *Update portfolio snapshot* → **Run workflow** to test. It should push a `snapshot: <date>` commit.
 
-## 3. Deploy on Vercel
-1. vercel.com → **Sign up with GitHub** → **Add New… → Project** → import `portfolio-tracker`.
-2. Set **Root Directory = `web`** (important). It auto-detects **Vite**; leave build `npm run build`, output `dist`.
-3. **Deploy.** You get a URL like `portfolio-tracker-xxxx.vercel.app`. Every push (including the daily data commit) auto-redeploys.
+## 3. Deploy on Vercel (with the password gate)
+1. vercel.com → **Sign up with GitHub** → **Add New… → Project** → import `portfolio_tracker`.
+2. Set **Root Directory = `web`** (important). It auto-detects **Vite** (build `npm run build`, output `dist`).
+3. **Before clicking Deploy**, open **Environment Variables** and add one:
+   - **Key:** `SITE_PASSWORD`   **Value:** *(a password you choose)*
+   The gate (`web/middleware.js`) is fail-closed — if this isn't set, the site returns 503 and serves nothing, so it can never leak.
+4. **Deploy.** You get a URL like `portfolio-tracker-xxxx.vercel.app`. Opening it shows a browser login prompt — any username + that password. Every push (incl. the daily data commit) auto-redeploys.
 
-## ⚠️ Access / privacy — decide before going live
-A Vercel URL is **public by default** — anyone with the link can see your whole portfolio. A private GitHub repo does **not** make the site private. Free options:
-- **Obscure URL** — simplest; security-by-obscurity (don't share the link).
-- **Local only** — skip Vercel; run `cd web && npm run dev` when you want it.
-- **App password gate** — deters casual viewing, but the data still ships in the JS bundle, so it's not real security.
-Vercel's built-in password / SSO protection requires a **paid** plan.
+## Access / privacy — password gate (implemented)
+`web/middleware.js` is Vercel Routing (Edge) Middleware: it runs **before any file is served**, so it protects the page **and** the underlying `data/latest.json` behind HTTP Basic Auth. This is the free way to actually keep the contents private (a client-side lock screen would leave the JSON fetchable).
+- Set **`SITE_PASSWORD`** in Vercel (step 3). Single shared password, any username. Fail-closed if unset.
+- **Local dev is not gated** — the middleware only runs on Vercel; `npm run dev` stays open on localhost.
+- Change the password anytime: edit the `SITE_PASSWORD` env var in Vercel → redeploy.
+- True multi-user SSO would need Vercel's paid Deployment Protection.
 
 ## How it stays current
 Actions (daily) commits new `data/latest.json` + `history.csv` → Vercel redeploys → dashboard shows the fresh snapshot. The value-over-time chart gains one point per day.
