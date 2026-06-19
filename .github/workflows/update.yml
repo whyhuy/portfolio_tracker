@@ -1,0 +1,39 @@
+name: Update portfolio snapshot
+
+# Free scheduled automation. Runs daily after US market close, plus on-demand.
+on:
+  schedule:
+    - cron: "30 21 * * *"     # 21:30 UTC daily (~after US close); crypto trades 24/7 so run every day.
+  workflow_dispatch:           # lets you run it manually from the Actions tab
+
+permissions:
+  contents: write              # needed to commit the refreshed data files
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      # Crypto is entered manually (config crypto_exchanges = []), so NO exchange API
+      # secrets are needed. If you re-enable the read-only ccxt sync later, add the keys
+      # as repo Secrets and pass them to this step via an `env:` block.
+      - name: Build snapshot
+        run: |
+          cd scripts
+          python build_snapshot.py
+
+      - name: Commit updated data
+        run: |
+          git config user.name "portfolio-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/latest.json data/history.csv data/snapshots/
+          git diff --staged --quiet || git commit -m "snapshot: $(date -u +%Y-%m-%d)"
+          git push

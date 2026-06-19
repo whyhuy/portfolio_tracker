@@ -1,0 +1,22 @@
+# Secrets — never commit
+.env
+*.key
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node / React
+node_modules/
+web/dist/
+web/.next/
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Claude Code (local tooling / preview config)
+.claude/

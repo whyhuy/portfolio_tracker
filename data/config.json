@@ -1,0 +1,12 @@
+{
+  "base_currency": "USD",
+  "display_currencies": ["USD", "SGD", "VND"],
+  "fx_pairs": ["USDSGD", "USDVND"],
+  "crypto_exchanges": [],
+  "_comment_exchanges": "API auto-sync DEFERRED (manual entry for now). Re-add 'kraken'/'gemini'/'cryptocom' here to switch read-only auto-sync back on later.",
+  "coingecko_vs_currency": "usd",
+  "refresh": {
+    "schedule": "daily after US market close",
+    "note": "Dashboard also fetches fresh prices on open so it feels current."
+  }
+}
