@@ -1,20 +1,20 @@
 {
-  "as_of": "2026-06-19T05:39:59.245841Z",
+  "as_of": "2026-06-19T05:40:58.445124Z",
   "base_currency": "USD",
   "totals": {
     "USD": 24687.55,
-    "SGD": 31924.7,
+    "SGD": 31924.46,
     "VND": 650146629.25
   },
   "pnl": {
     "base_currency": "USD",
-    "total_cost": 30968.5,
+    "total_cost": 30968.57,
     "total_value": 24687.55,
-    "total_gain_loss": -6280.95,
+    "total_gain_loss": -6281.02,
     "total_gain_loss_pct": -20.28
   },
   "fx": {
-    "USDSGD": 1.2931499481201172,
+    "USDSGD": 1.2931400537490845,
     "USDVND": 26335.0
   },
   "positions": [
@@ -27,8 +27,8 @@
       "price": 62553.0,
       "price_ccy": "USD",
       "value_base": 4653.26,
-      "cost_base": 3281.37,
-      "gain_loss": 1371.89,
+      "cost_base": 3281.39,
+      "gain_loss": 1371.86,
       "gain_loss_pct": 41.81
     },
     {
@@ -40,7 +40,7 @@
       "price": 1693.45,
       "price_ccy": "USD",
       "value_base": 396.27,
-      "cost_base": 693.59,
+      "cost_base": 693.6,
       "gain_loss": -297.33,
       "gain_loss_pct": -42.87
     },
@@ -53,8 +53,8 @@
       "price": 0.057849,
       "price_ccy": "USD",
       "value_base": 566.53,
-      "cost_base": 3925.93,
-      "gain_loss": -3359.4,
+      "cost_base": 3925.96,
+      "gain_loss": -3359.43,
       "gain_loss_pct": -85.57
     },
     {
@@ -261,8 +261,8 @@
       "price": 1.13,
       "price_ccy": "USD",
       "value_base": 1299.12,
-      "cost_base": 1840.32,
-      "gain_loss": -541.2,
+      "cost_base": 1840.33,
+      "gain_loss": -541.21,
       "gain_loss_pct": -29.41
     }
   ]
