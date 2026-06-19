@@ -7,6 +7,7 @@ import HeroSummary from './components/HeroSummary'
 import StatCard from './components/StatCard'
 import AllocationDonut from './components/AllocationDonut'
 import ValueChart from './components/ValueChart'
+import PriceHistory from './components/PriceHistory'
 import FundCard from './components/FundCard'
 import Holdings from './components/Holdings'
 
@@ -94,6 +95,8 @@ export default function App() {
         </div>
 
         <ValueChart history={history} ccy={ccy} fx={fx} />
+
+        <PriceHistory positions={data.positions} ccy={ccy} fx={fx} />
 
         {data.funds?.map((f) => (
           <FundCard
