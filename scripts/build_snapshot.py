@@ -61,6 +61,7 @@ def to_base_ccy(amount: float, ccy: str, base: str, fx: dict[str, float]) -> flo
 def build() -> dict:
     cfg = load_config()
     base = cfg["base_currency"]
+    managed_funds = cfg.get("managed_funds", {})
     holdings = load_holdings()
 
     # --- prices ---
@@ -93,24 +94,30 @@ def build() -> dict:
         value_base = to_base_ccy(value, price_ccy, base, fx)
 
         # --- cost basis + unrealised P&L (USD), Phase 2 ---
-        # cost = unit_cost * quantity in the row's cost_ccy, converted to base via live FX.
-        unit_cost = _num(h.get("unit_cost"))
-        cost_ccy = (h.get("cost_ccy") or base).strip().upper() or base
-        cost_base = to_base_ccy(unit_cost * qty, cost_ccy, base, fx)
-        gain_loss = value_base - cost_base
-        gain_loss_pct = (gain_loss / cost_base * 100) if cost_base else None
+        # Managed-fund members (e.g. Syfe Core Equity100) carry no per-holding cost — the fund's
+        # cost is tracked once at the fund level, so their per-row P&L stays blank.
+        fund = h.get("platform") if h.get("platform") in managed_funds else None
+        if fund:
+            cost_base = gain_loss = gain_loss_pct = None
+        else:
+            unit_cost = _num(h.get("unit_cost"))
+            cost_ccy = (h.get("cost_ccy") or base).strip().upper() or base
+            cost_base = to_base_ccy(unit_cost * qty, cost_ccy, base, fx)
+            gain_loss = value_base - cost_base
+            gain_loss_pct = (gain_loss / cost_base * 100) if cost_base else None
 
         positions.append({
             "ticker": h["ticker"],
             "label": h["label"],
             "asset_class": h["asset_class"],
             "platform": h["platform"],
+            "fund": fund,
             "quantity": qty,
             "price": price,
             "price_ccy": price_ccy,
             "value_base": round(value_base, 2),
-            "cost_base": round(cost_base, 2),
-            "gain_loss": round(gain_loss, 2),
+            "cost_base": round(cost_base, 2) if cost_base is not None else None,
+            "gain_loss": round(gain_loss, 2) if gain_loss is not None else None,
             "gain_loss_pct": round(gain_loss_pct, 2) if gain_loss_pct is not None else None,
         })
 
@@ -123,9 +130,30 @@ def build() -> dict:
         #   and append to `positions` with platform = exchange name.
         _ = sc.sync_all(exchanges)
 
+    # --- managed funds: value from members, cost from the invested amount (fund-level P&L) ---
+    funds = []
+    for fname, fmeta in managed_funds.items():
+        members = [p for p in positions if p.get("fund") == fname]
+        if not members:
+            continue
+        fvalue = round(sum(p["value_base"] for p in members), 2)
+        fcost = round(to_base_ccy(_num(fmeta.get("invested")),
+                                  (fmeta.get("invested_ccy") or base).strip().upper(), base, fx), 2)
+        fgain = round(fvalue - fcost, 2)
+        funds.append({
+            "name": fname,
+            "value": fvalue,
+            "cost": fcost,
+            "gain_loss": fgain,
+            "gain_loss_pct": round(fgain / fcost * 100, 2) if fcost else None,
+            "holdings": len(members),
+        })
+
     # --- totals + aggregate unrealised P&L (USD) ---
+    # Direct holdings contribute their own cost; managed funds contribute their invested amount.
     total_base = round(sum(p["value_base"] for p in positions), 2)
-    total_cost = round(sum(p["cost_base"] for p in positions), 2)
+    direct_cost = sum(p["cost_base"] for p in positions if p["cost_base"] is not None)
+    total_cost = round(direct_cost + sum(f["cost"] for f in funds), 2)
     total_gain_loss = round(total_base - total_cost, 2)
     total_gain_loss_pct = round(total_gain_loss / total_cost * 100, 2) if total_cost else None
 
@@ -148,6 +176,7 @@ def build() -> dict:
             "total_gain_loss": total_gain_loss,
             "total_gain_loss_pct": total_gain_loss_pct,
         },
+        "funds": funds,
         "fx": fx,
         "positions": positions,
     }

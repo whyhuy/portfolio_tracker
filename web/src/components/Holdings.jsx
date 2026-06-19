@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { money, percent, plClass, cleanName, symbolOf } from '../lib/format'
 import { colorFor } from '../lib/palette'
 
-export default function Holdings({ positions, ccy, fx, totalUSD }) {
+export default function Holdings({ positions, ccy, fx, totalUSD, title = 'Holdings' }) {
   const [sort, setSort] = useState({ key: 'value_base', dir: -1 })
 
   const rows = [...positions].sort((a, b) => {
@@ -27,7 +27,7 @@ export default function Holdings({ positions, ccy, fx, totalUSD }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-2 sm:p-4">
       <div className="px-1 py-2 text-sm font-medium text-slate-300">
-        Holdings <span className="text-slate-500">({positions.length})</span>
+        {title} <span className="text-slate-500">({positions.length})</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">

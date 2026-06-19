@@ -7,6 +7,7 @@ import HeroSummary from './components/HeroSummary'
 import StatCard from './components/StatCard'
 import AllocationDonut from './components/AllocationDonut'
 import ValueChart from './components/ValueChart'
+import FundCard from './components/FundCard'
 import Holdings from './components/Holdings'
 
 function groupSlices(positions, key, useClassColor) {
@@ -37,6 +38,7 @@ export default function App() {
 
   const byClass = useMemo(() => (data ? groupSlices(data.positions, 'asset_class', true) : []), [data])
   const byPlatform = useMemo(() => (data ? groupSlices(data.positions, 'platform', false) : []), [data])
+  const directPositions = useMemo(() => (data ? data.positions.filter((p) => !p.fund) : []), [data])
 
   if (loading) {
     return <Centered>Loading portfolio…</Centered>
@@ -93,7 +95,17 @@ export default function App() {
 
         <ValueChart history={history} ccy={ccy} fx={fx} />
 
-        <Holdings positions={data.positions} ccy={ccy} fx={fx} totalUSD={totals.USD} />
+        {data.funds?.map((f) => (
+          <FundCard
+            key={f.name}
+            fund={f}
+            members={data.positions.filter((p) => p.fund === f.name)}
+            ccy={ccy}
+            fx={fx}
+          />
+        ))}
+
+        <Holdings positions={directPositions} title="Direct holdings" ccy={ccy} fx={fx} totalUSD={totals.USD} />
 
         <footer className="pt-2 text-center text-xs text-slate-600">
           Prices via yfinance &amp; CoinGecko · FX USD→SGD {fx.USDSGD?.toFixed(4)}, USD→VND{' '}

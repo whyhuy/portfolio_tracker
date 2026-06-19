@@ -4,6 +4,10 @@
   "fx_pairs": ["USDSGD", "USDVND"],
   "crypto_exchanges": [],
   "_comment_exchanges": "API auto-sync DEFERRED (manual entry for now). Re-add 'kraken'/'gemini'/'cryptocom' here to switch read-only auto-sync back on later.",
+  "managed_funds": {
+    "Syfe Core Equity100": { "invested": 31200, "invested_ccy": "SGD" }
+  },
+  "_comment_funds": "Managed funds: cost is the total amount invested (no per-holding cost). Member rows in holdings.csv use platform = the fund name; their value is priced live, P&L is reported at the fund level.",
   "coingecko_vs_currency": "usd",
   "refresh": {
     "schedule": "daily after US market close",
