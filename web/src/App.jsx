@@ -6,6 +6,7 @@ import CurrencyToggle from './components/CurrencyToggle'
 import HeroSummary from './components/HeroSummary'
 import StatCard from './components/StatCard'
 import AllocationDonut from './components/AllocationDonut'
+import ClassPerformance from './components/ClassPerformance'
 import ValueChart from './components/ValueChart'
 import PriceHistory from './components/PriceHistory'
 import FundCard from './components/FundCard'
@@ -93,6 +94,8 @@ export default function App() {
           <AllocationDonut title="Allocation by asset class" slices={byClass} ccy={ccy} fx={fx} totalUSD={totals.USD} />
           <AllocationDonut title="Allocation by platform" slices={byPlatform} ccy={ccy} fx={fx} totalUSD={totals.USD} />
         </div>
+
+        <ClassPerformance positions={directPositions} funds={data.funds || []} ccy={ccy} fx={fx} />
 
         <ValueChart costUSD={pnl.total_cost} ccy={ccy} fx={fx} />
 
