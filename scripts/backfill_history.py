@@ -73,7 +73,58 @@ def write_rows(path: Path, rows) -> None:
         w.writerows(rows)
 
 
+def _num(x) -> float:
+    try:
+        return float(str(x).replace(",", "").strip())
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def reconstruct_portfolio() -> None:
+    """Rebuild the portfolio's daily USD value = sum(current quantity x each holding's price history).
+    Each holding contributes only from its first available price (its listing / when bought), using
+    the current quantity throughout. This is a constant-holdings reconstruction (we have no trade
+    history), so it's 'what today's basket would have been worth', not actual past balances."""
+    import pandas as pd
+
+    qty: dict[str, float] = {}
+    for h in load_holdings():
+        if (h.get("asset_class") or "").strip().lower() == "cash":
+            continue
+        t = (h.get("ticker") or "").strip()
+        q = _num(h.get("quantity"))
+        if t and q:
+            qty[t] = q
+
+    cols = {}
+    for t, q in qty.items():
+        p = PRICES / f"{t}.csv"
+        if not p.exists():
+            continue
+        s = pd.read_csv(p, parse_dates=["date"]).set_index("date")["close"].sort_index()
+        cols[t] = s * q
+    if not cols:
+        print("[reconstruct] no price files; skipped")
+        return
+
+    df = pd.DataFrame(cols)
+    full = pd.date_range(df.index.min(), df.index.max(), freq="D")
+    df = df.reindex(full).ffill()  # carry each holding forward within its life; pre-listing stays NaN
+    total = df.sum(axis=1, min_count=1).dropna()
+
+    with (DATA / "portfolio_history.csv").open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["date", "value_usd"])
+        for d, v in total.items():
+            w.writerow([d.date().isoformat(), round(float(v), 2)])
+    print(f"[reconstruct] {len(total)} days {total.index.min().date()}..{total.index.max().date()} "
+          f"latest ${float(total.iloc[-1]):,.0f}")
+
+
 def main() -> None:
+    if "--reconstruct" in sys.argv:
+        reconstruct_portfolio()
+        return
     update = "--update" in sys.argv
     PRICES.mkdir(parents=True, exist_ok=True)
     start = (dt.date.today() - dt.timedelta(days=365 * YEARS + 3)).isoformat()
@@ -107,6 +158,8 @@ def main() -> None:
         except Exception as e:  # noqa: BLE001
             print(f"[error] {key} ({sym}): {e}")
         time.sleep(0.2)
+
+    reconstruct_portfolio()
 
 
 if __name__ == "__main__":

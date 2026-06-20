@@ -10,7 +10,7 @@ const dataSrc = resolve(webRoot, '..', 'data')
 const dest = resolve(webRoot, 'public', 'data')
 
 mkdirSync(dest, { recursive: true })
-for (const f of ['latest.json', 'history.csv']) {
+for (const f of ['latest.json', 'history.csv', 'portfolio_history.csv']) {
   const from = resolve(dataSrc, f)
   if (existsSync(from)) {
     copyFileSync(from, resolve(dest, f))

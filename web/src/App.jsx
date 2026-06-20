@@ -94,7 +94,7 @@ export default function App() {
           <AllocationDonut title="Allocation by platform" slices={byPlatform} ccy={ccy} fx={fx} totalUSD={totals.USD} />
         </div>
 
-        <ValueChart history={history} ccy={ccy} fx={fx} />
+        <ValueChart costUSD={pnl.total_cost} ccy={ccy} fx={fx} />
 
         <PriceHistory positions={data.positions} ccy={ccy} fx={fx} />
 
