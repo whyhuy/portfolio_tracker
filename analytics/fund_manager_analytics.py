@@ -194,3 +194,110 @@ ax.set_title(f"Correlation matrix (Ledoit-Wolf, {win_start}..{win_end})")
 fig.tight_layout()
 fig.savefig(OUT / "correlation_heatmap.png", dpi=130)
 print(f"\nSaved: {OUT/'correlation_heatmap.png'}, stage1_inputs.csv, correlation.csv, sigma_ledoitwolf.csv")
+
+
+# %% [markdown]
+# ## Stage 2 — Mean-variance optimisation
+#
+# The max-Sharpe (tangency) portfolio, the efficient frontier with your current portfolio on it, and
+# min-variance + risk-parity references. Constraints: long-only, fully invested, **≤25% per position,
+# ≤20% crypto sleeve**. Inputs: μ = CAPM, Σ = Ledoit-Wolf (from Stage 1).
+
+# %%
+from scipy.optimize import minimize
+
+assets = list(rets.columns)
+mu_vec = mu_capm.reindex(assets).values
+Sig = Sigma_lw.loc[assets, assets].values
+n = len(assets)
+classes = np.array([CLS[a] for a in assets])
+is_crypto = classes == "crypto"
+rf = RF_ANNUAL
+val = pd.Series(VALUE).reindex(assets)
+w_cur = (val / val.sum()).values
+
+def p_ret(w):
+    return float(mu_vec @ w)
+
+def p_vol(w):
+    return float(np.sqrt(w @ Sig @ w))
+
+def p_sharpe(w):
+    return (p_ret(w) - rf) / p_vol(w)
+
+bounds = [(0.0, POS_CAP)] * n
+cons_full = [
+    {"type": "eq", "fun": lambda w: w.sum() - 1.0},                     # fully invested
+    {"type": "ineq", "fun": lambda w: CRYPTO_CAP - w[is_crypto].sum()},  # crypto sleeve cap
+]
+w0 = np.full(n, 1.0 / n)
+OPTS = {"maxiter": 800, "ftol": 1e-11}
+
+w_ms = minimize(lambda w: -p_sharpe(w), w0, method="SLSQP", bounds=bounds, constraints=cons_full, options=OPTS).x
+w_mv = minimize(lambda w: w @ Sig @ w, w0, method="SLSQP", bounds=bounds, constraints=cons_full, options=OPTS).x
+
+def rp_obj(w):                                                          # risk parity: equalise risk contributions
+    s = np.sqrt(w @ Sig @ w)
+    rc = w * (Sig @ w) / s
+    return np.sum((rc - rc.mean()) ** 2)
+
+w_rp = minimize(rp_obj, w0, method="SLSQP", bounds=[(0.0, 1.0)] * n,
+                constraints=[{"type": "eq", "fun": lambda w: w.sum() - 1.0}], options=OPTS).x
+
+for wv in (w_ms, w_mv, w_rp):
+    wv[np.abs(wv) < 1e-5] = 0.0
+
+# %%
+# weights comparison + portfolio stats
+cmp = pd.DataFrame(
+    {"class": classes, "current": w_cur, "max_sharpe": w_ms, "min_var": w_mv, "risk_parity": w_rp},
+    index=assets,
+).sort_values("current", ascending=False)
+print("\n=== Weights: current vs optimised (%) ===")
+print(cmp[["class"]].join((cmp[["current", "max_sharpe", "min_var", "risk_parity"]] * 100).round(1)).to_string())
+
+print("\n=== By asset class (%) ===")
+print((cmp.groupby("class")[["current", "max_sharpe", "min_var", "risk_parity"]].sum() * 100).round(1).to_string())
+
+rows = {"current": w_cur, "max_sharpe": w_ms, "min_var": w_mv, "risk_parity": w_rp}
+stat = pd.DataFrame({k: {"exp_return": p_ret(w), "volatility": p_vol(w), "sharpe": p_sharpe(w)} for k, w in rows.items()}).T
+disp = stat.copy()
+disp["exp_return"] = (disp["exp_return"] * 100).round(1).astype(str) + "%"
+disp["volatility"] = (disp["volatility"] * 100).round(1).astype(str) + "%"
+disp["sharpe"] = disp["sharpe"].round(2)
+print("\n=== Portfolio stats (annualised) ===")
+print(disp.to_string())
+print(f"\nSharpe: current {p_sharpe(w_cur):.2f} -> max-Sharpe {p_sharpe(w_ms):.2f} "
+      f"(+{p_sharpe(w_ms) - p_sharpe(w_cur):.2f})")
+cmp.to_csv(OUT / "stage2_weights.csv")
+
+# %%
+# efficient frontier + chart
+w_maxret = minimize(lambda w: -p_ret(w), w0, method="SLSQP", bounds=bounds, constraints=cons_full, options=OPTS).x
+fr_v, fr_r = [], []
+for t in np.linspace(p_ret(w_mv), p_ret(w_maxret), 40):
+    cons = cons_full + [{"type": "eq", "fun": lambda w, t=t: p_ret(w) - t}]
+    r = minimize(lambda w: w @ Sig @ w, w0, method="SLSQP", bounds=bounds, constraints=cons, options=OPTS)
+    if r.success:
+        fr_v.append(p_vol(r.x) * 100)
+        fr_r.append(t * 100)
+
+fig, ax = plt.subplots(figsize=(9, 6))
+ax.plot(fr_v, fr_r, "-", color="#64748b", lw=1.6, label="Efficient frontier")
+ax.scatter(np.sqrt(np.diag(Sig)) * 100, mu_vec * 100, s=16, color="#94a3b8", alpha=0.6)
+for i, a in enumerate(assets):
+    ax.annotate(a[:7], (np.sqrt(Sig[i, i]) * 100, mu_vec[i] * 100), fontsize=6, color="#94a3b8")
+xs = np.linspace(0, max(fr_v) * 1.05, 50)
+ax.plot(xs, rf * 100 + p_sharpe(w_ms) * xs, "--", color="#34d399", lw=1, label="Capital market line")
+for name, w, c, m in [("Current", w_cur, "#f87171", "o"), ("Max-Sharpe", w_ms, "#34d399", "*"),
+                      ("Min-variance", w_mv, "#60a5fa", "s"), ("Risk-parity", w_rp, "#fbbf24", "D")]:
+    ax.scatter(p_vol(w) * 100, p_ret(w) * 100, s=200 if m == "*" else 80, color=c, marker=m,
+               label=name, zorder=5, edgecolors="white", linewidths=0.6)
+ax.set_xlabel("Volatility (annualised, %)")
+ax.set_ylabel("Expected return (annualised, %)")
+ax.set_title("Efficient frontier — current vs optimised")
+ax.legend(loc="lower right", fontsize=9)
+ax.grid(alpha=0.15)
+fig.tight_layout()
+fig.savefig(OUT / "efficient_frontier.png", dpi=130)
+print(f"\nSaved: {OUT/'efficient_frontier.png'}, stage2_weights.csv")
