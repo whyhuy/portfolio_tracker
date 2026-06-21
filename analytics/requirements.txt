@@ -1,0 +1,9 @@
+# Fund-manager analytics notebook deps (NOT used by the daily cron).
+# Install on top of the data-layer deps:  pip install -r scripts/requirements.txt -r analytics/requirements.txt
+numpy>=1.26
+pandas>=2.2
+scipy>=1.11
+scikit-learn>=1.4
+matplotlib>=3.8
+yfinance>=0.2.40
+jupytext>=1.16

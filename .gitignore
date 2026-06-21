@@ -20,3 +20,6 @@ web/.next/
 
 # Claude Code (local tooling / preview config)
 .claude/
+
+# Analytics generated outputs (regenerate by running analytics/)
+analytics/outputs/
