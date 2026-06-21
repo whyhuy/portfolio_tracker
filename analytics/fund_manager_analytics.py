@@ -301,3 +301,57 @@ ax.grid(alpha=0.15)
 fig.tight_layout()
 fig.savefig(OUT / "efficient_frontier.png", dpi=130)
 print(f"\nSaved: {OUT/'efficient_frontier.png'}, stage2_weights.csv")
+
+
+# %% [markdown]
+# ## Stage 3 — Risk decomposition: add / trim
+#
+# At your **current** weights, decompose total risk. For each position:
+# **MCR** (marginal contribution to risk = how much portfolio vol moves if you add a sliver), its
+# **risk share** (% of total vol it accounts for), its **return share** (% of the portfolio's excess
+# return), and its **marginal Sharpe** (excess return ÷ MCR).
+#
+# **Flag:** ADD if return-share > risk-share, TRIM if it's a risk hog earning too little. This is
+# exactly equivalent to "marginal Sharpe above vs below the portfolio Sharpe" — assets above the line
+# improve the book at the margin, assets below drag it.
+
+# %%
+sig_p = p_vol(w_cur)
+mcr = Sig @ w_cur / sig_p                       # marginal contribution to risk
+rc = w_cur * mcr                                # risk contribution (sums to sig_p)
+risk_share = rc / sig_p                         # % of total risk
+exret = mu_vec - rf
+ret_share = (w_cur * exret) / (w_cur * exret).sum()
+marg_sharpe = exret / mcr                       # marginal Sharpe per position
+sharpe_p = p_sharpe(w_cur)
+
+risk3 = pd.DataFrame({
+    "class": classes, "weight": w_cur, "risk_share": risk_share,
+    "return_share": ret_share, "MCR": mcr, "marg_sharpe": marg_sharpe,
+}, index=assets)
+risk3["net"] = risk3["return_share"] - risk3["risk_share"]
+risk3["flag"] = np.where(risk3["net"] >= 0, "ADD", "TRIM")
+risk3 = risk3.sort_values("net", ascending=False)
+
+show3 = risk3.copy()
+for c in ["weight", "risk_share", "return_share", "net"]:
+    show3[c] = (show3[c] * 100).round(1).astype(str) + "%"
+show3["MCR"] = show3["MCR"].round(3)
+show3["marg_sharpe"] = show3["marg_sharpe"].round(2)
+print(f"Current portfolio: vol {sig_p:.1%} | Sharpe {sharpe_p:.2f}  "
+      f"(marginal Sharpe > {sharpe_p:.2f} => ADD at the margin)")
+print("\n=== Risk decomposition / add-trim (current weights) ===")
+print(show3.to_string())
+risk3.to_csv(OUT / "stage3_risk_decomposition.csv")
+
+# %%
+order = risk3.sort_values("net")
+fig, ax = plt.subplots(figsize=(9, 6))
+ax.barh(order.index, order["net"] * 100, color=["#34d399" if v >= 0 else "#f87171" for v in order["net"]])
+ax.axvline(0, color="#94a3b8", lw=0.8)
+ax.set_xlabel("Return share − risk share (percentage points)    ←  TRIM   |   ADD  →")
+ax.set_title("Are you paid for the risk you take? (current weights)")
+ax.grid(axis="x", alpha=0.15)
+fig.tight_layout()
+fig.savefig(OUT / "risk_addtrim.png", dpi=130)
+print(f"\nSaved: {OUT/'risk_addtrim.png'}, stage3_risk_decomposition.csv")
