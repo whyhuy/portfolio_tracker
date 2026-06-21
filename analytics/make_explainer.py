@@ -112,6 +112,7 @@ them with CAPM rather than trusting the past.</p>
 <tr><td>Realised return (CAGR), realised Sharpe, Sortino, Calmar</td><td>Ex-post</td><td>Your actual track record, and how the ride felt.</td></tr>
 <tr><td>Maximum drawdown</td><td>Ex-post</td><td>The worst peak-to-trough fall that actually happened.</td></tr>
 <tr><td>Beta, tracking error, information ratio vs ACWI</td><td>Ex-post</td><td>How you actually did against the benchmark.</td></tr>
+<tr><td>Treynor, Jensen's alpha, up/down capture, hit rate</td><td>Ex-post</td><td>Risk-adjusted skill, capture and consistency, all read off the realised record.</td></tr>
 <tr><td>Factor exposures and R²</td><td>Ex-post</td><td>Which style bets actually drove your past returns.</td></tr>
 <tr><td>Backtest (current +155% vs optimised +123%)</td><td>Ex-post</td><td>How the mixes would have performed over the window.</td></tr>
 <tr><td>Historical-average μ, bootstrap simulation</td><td>Ex-post</td><td>Pure history, shown only for comparison.</td></tr>
@@ -331,6 +332,49 @@ which is large because crypto, silver and single stocks pull you away from a pla
 for active skill; yours is <span class="num">1.02</span> (you beat global equities by 13.3% a year,
 though with big deviations). Over a different period that active bet could just as easily hurt.</p>
 
+<h3>Return per unit of <em>market</em> risk: Treynor and Jensen's alpha</h3>
+<p>Sharpe divides your excess return by <em>total</em> risk. But in a diversified book the risk that
+"deserves" a reward is only the part you cannot diversify away, the market (beta) risk. Two classic
+measures judge you on that instead.</p>
+<p>The <strong>Treynor ratio</strong> is excess return per unit of beta:</p>
+\[ \text{Treynor} = \frac{R_p - R_f}{\beta_p} = \frac{35.1\% - 4\%}{1.09} \approx 0.29 \]
+<p>The benchmark itself has a beta of 1.0, so its Treynor is just its own excess return, about
+<span class="num">0.155</span>. You score <span class="num">0.29</span>, nearly <em>double</em>, meaning
+you have earned almost twice the reward per unit of market risk that global equities did. Treynor is
+the right lens when beta is the risk you care about; Sharpe is the right lens when total volatility is.</p>
+<p><strong>Jensen's alpha</strong> asks the sharper question: given how much market risk you took, what
+return <em>should</em> you have earned, and did you beat it? CAPM predicts a fair return of
+\( R_f + \beta_p(R_m - R_f) \), and your alpha is whatever you made above that line:</p>
+\[ \begin{aligned} \alpha_J &= R_p - \big[\,R_f + \beta_p (R_m - R_f)\,\big] \\ &= 35.1\% - \big(\,4\% + 1.09 \times 15.5\%\,\big) = +14.2\% \end{aligned} \]
+<p>Your beta alone "entitled" you to about a 21% return; you made 35%, so roughly
+<span class="num">+14% a year</span> is outperformance that market risk does not explain. Reassuringly,
+it lines up with your factor-regression alpha (+12.6%) and your active return (+13.3%), three different
+methods agreeing the edge was real, at least over this window.</p>
+
+<h3>Up and down capture, and hit rate</h3>
+<p><strong>Capture ratios</strong> split the benchmark's months into the ones it rose and the ones it
+fell, then ask how much of each move you caught. Up-capture is your compounded return in ACWI's up
+months divided by ACWI's; down-capture is the same for its down months.</p>
+<table><thead><tr><th>Measure</th><th>You</th><th>Reading</th></tr></thead><tbody>
+<tr><td>Up-capture</td><td>179%</td><td>In rising months you gained about 1.8&times; what the market did, you amplify rallies.</td></tr>
+<tr><td>Down-capture</td><td>97%</td><td>In falling months you lost slightly <em>less</em> than the market, marginally defensive.</td></tr>
+</tbody></table>
+<p>The prize is the combination. Catching far more of the upside (179%) than the downside (97%) is
+exactly the asymmetry a fund manager hunts for, and it is where most of your alpha comes from. The
+honest caveat: this is measured over a boom, so the gaudy up-capture partly reflects crypto and silver
+soaring, do not bank on 179% in the next real downturn.</p>
+<div class="box warn"><div class="h">Capture vs the stress test, not a contradiction</div>
+Down-capture (97%) says you historically fell a touch <em>less</em> than ACWI, yet the stress test
+below says a 20% market crash costs you about 17.5%. Both are right: capture is what
+<em>actually</em> happened, where your stock-picking gains offset many market dips; the stress test
+switches that luck off and shocks the market alone. Capture is your record; the stress test is a
+deliberately pessimistic what-if.</div>
+<p>The <strong>hit rate</strong> is a breadth check, are your gains broad or one fluke? Of your 19
+positions, <span class="num">14 (74%)</span> are in profit over the window, and
+<span class="num">65%</span> of your months were positive. Both being comfortably above half says the
+performance is well spread and reasonably consistent, not a single lucky position carrying everything.
+A strong return paired with a <em>low</em> hit rate would be the warning sign; yours is the opposite.</p>
+
 <h3>How concentrated are you really? (HHI)</h3>
 <p>The Herfindahl index adds up the squares of your weights. Its reciprocal is the "effective number
 of holdings." On the surface your book scores like just <span class="num">3.1</span> holdings, because
@@ -416,6 +460,10 @@ point to. None of this is advice; it is what the analysis suggests, and the deci
 <tr><td>Beta vs world stocks</td><td>1.09</td><td>You fall slightly more than global equities in a sell-off, not less.</td></tr>
 <tr><td>Tracking error</td><td>13.1%</td><td>You stray a long way from a plain index. You are making active bets, for better or worse.</td></tr>
 <tr><td>Information ratio</td><td>1.02</td><td>Those bets paid off over the window. That is history, not a promise.</td></tr>
+<tr><td>Treynor ratio</td><td>0.29</td><td>Per unit of market risk you earned nearly double what the index did. Strong, if it persists.</td></tr>
+<tr><td>Jensen's alpha</td><td>+14.2%</td><td>Most of your return is not just market risk; there was genuine edge here, over this window.</td></tr>
+<tr><td>Up / down capture</td><td>179% / 97%</td><td>You amplify rallies and barely cushion falls. Brilliant in a boom, punishing if the trend turns.</td></tr>
+<tr><td>Hit rate</td><td>74% positions / 65% months</td><td>Gains are broad and fairly steady, not one fluke carrying the book.</td></tr>
 <tr><td>Concentration (HHI)</td><td>3.1 (12.1 look-through)</td><td>The real concentration is half your money in one product. The fund diversifies inside, so the fix is to not let it grow, not to panic.</td></tr>
 <tr><td>Factor tilt</td><td>small-cap, low quality</td><td>You are making a speculative bet. In a flight to safety this profile tends to lag.</td></tr>
 <tr><td>Equity −20% stress</td><td>−$8,800</td><td>A normal-sized bad market costs you roughly this. Size positions so it does not derail your plan.</td></tr>
@@ -480,6 +528,10 @@ thing assumes today's holdings were held throughout, since there is no trade his
 <tr><td>Calmar</td><td>Annual return divided by the worst drawdown.</td></tr>
 <tr><td>Tracking error</td><td>How far your returns stray from a benchmark.</td></tr>
 <tr><td>Information ratio</td><td>Return above a benchmark per unit of tracking error.</td></tr>
+<tr><td>Treynor ratio</td><td>Excess return per unit of market (beta) risk, not total risk.</td></tr>
+<tr><td>Jensen's alpha</td><td>Return earned above what CAPM predicts for your beta.</td></tr>
+<tr><td>Up / down capture</td><td>Your share of the benchmark's gains in up months vs its losses in down months.</td></tr>
+<tr><td>Hit rate</td><td>The fraction of positions (or months) that are positive; a breadth check.</td></tr>
 <tr><td>HHI</td><td>A concentration score; its reciprocal is the effective number of holdings.</td></tr>
 <tr><td>Factor exposure</td><td>How much of your return is explained by common style bets.</td></tr>
 </tbody></table>

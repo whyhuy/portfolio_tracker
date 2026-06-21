@@ -361,7 +361,8 @@ print(f"\nSaved: {OUT/'risk_addtrim.png'}, stage3_risk_decomposition.csv")
 # ## Stage 4 — Fund-manager analytics
 #
 # Risk metrics (VaR / Expected Shortfall, max drawdown / Calmar, Sortino), benchmark-relative stats
-# (β, tracking error, information ratio vs ACWI), concentration (HHI + look-through), style-factor
+# (β, tracking error, information ratio vs ACWI), market-risk-adjusted performance (Treynor, Jensen's
+# alpha), up/down capture and hit rate, concentration (HHI + look-through), style-factor
 # exposures (factor-ETF proxies for FF5+momentum, aligned to the same window), exposure by region
 # (Syfe fund decomposed), stress tests, and a constant-weight backtest of current vs optimised weights.
 
@@ -407,6 +408,32 @@ te = active.std() * np.sqrt(ann)
 ir = (active.mean() * ann) / te
 print(f"\n=== Vs benchmark (ACWI) ===\n  Beta {beta_p:.2f} | Tracking error {te:.1%} | "
       f"Information ratio {ir:.2f} | ann. active return {active.mean() * ann:+.1%}")
+
+# --- performance ratios: market-risk-adjusted, capture, breadth ---
+bm_cagr = float((1 + bm).prod() ** (ann / len(bm)) - 1)        # benchmark annualised return
+treynor = (cagr - rf) / beta_p                                 # excess return per unit of MARKET (beta) risk
+jensen = cagr - (rf + beta_p * (bm_cagr - rf))                 # CAPM alpha: return above what beta predicts
+
+# up/down capture — compounded over up- vs down-benchmark months (version-agnostic monthly resample)
+prm = (1 + pr).groupby(pr.index.to_period("M")).prod() - 1     # portfolio monthly returns
+bmm = (1 + bm).groupby(bm.index.to_period("M")).prod() - 1     # benchmark monthly returns
+up, dn = bmm > 0, bmm < 0
+up_cap = ((1 + prm[up]).prod() - 1) / ((1 + bmm[up]).prod() - 1)
+dn_cap = ((1 + prm[dn]).prod() - 1) / ((1 + bmm[dn]).prod() - 1)
+
+# hit rate — breadth of winners across positions, plus share of positive portfolio months
+win = (rets + 1).prod() - 1                                    # per-position cumulative return over the window
+n_win = int((win > 0).sum())
+hit_pos = n_win / len(win)                                     # # winning positions / total positions
+hit_mth = float((prm > 0).mean())                             # share of positive portfolio months
+
+print(f"\n=== Performance ratios (market-risk-adjusted, capture, breadth) ===")
+print(f"  Treynor ratio        {treynor:6.2f}    (excess return per unit of beta; benchmark ~{bm_cagr - rf:+.1%} per 1.0 beta)")
+print(f"  Jensen's alpha       {jensen:+6.1%}    (annualised return above CAPM prediction)")
+print(f"  Up-capture           {up_cap:6.0%}    (portfolio vs ACWI in up months;  >100% = amplifies rallies)")
+print(f"  Down-capture         {dn_cap:6.0%}    (portfolio vs ACWI in down months; <100% = defensive)")
+print(f"  Hit rate (positions) {hit_pos:6.0%}    ({n_win}/{len(win)} positions positive over the window)")
+print(f"  Hit rate (months)    {hit_mth:6.0%}    (share of positive portfolio months — consistency)")
 
 # --- concentration (HHI) + look-through ---
 latest = json.loads((DATA / "latest.json").read_text())
