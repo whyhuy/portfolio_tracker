@@ -478,6 +478,53 @@ for nm, b in zip(factors.columns, coef[1:]):
 print(f"  R^2 {r2:.2f}")
 
 # %%
+# --- higher-order & alpha-quality metrics (tail shape, M^2, appraisal, drawdown duration) ---
+from scipy import stats as sstats
+
+skew = float(sstats.skew(pr))
+exkurt = float(sstats.kurtosis(pr))                   # excess kurtosis (0 = normal bell curve)
+omega = float(pr[pr > 0].sum() / -pr[pr < 0].sum())   # Omega ratio at a 0% threshold
+tail_ratio = float(abs(np.percentile(pr, 95)) / abs(np.percentile(pr, 5)))
+
+sharpe_ann = (cagr - rf) / sd_p
+bm_vol = bm.std() * np.sqrt(ann)
+m2 = rf + sharpe_ann * bm_vol                          # Modigliani M^2: your Sharpe priced at the benchmark's risk
+m2_alpha = m2 - bm_cagr                                # M^2 over the benchmark's actual return
+
+resid = yv - X @ coef                                  # factor-model residuals (stock-specific moves)
+appraisal = (coef[0] * ann) / (resid.std() * np.sqrt(ann))   # alpha per unit of idiosyncratic risk
+
+z = -1.645                                             # 95% one-tailed normal quantile
+z_cf = z + (z**2 - 1) / 6 * skew + (z**3 - 3 * z) / 24 * exkurt - (2 * z**3 - 5 * z) / 36 * skew**2
+var95_cf = -(pr.mean() + z_cf * pr.std())              # Cornish-Fisher VaR (skew/kurtosis-adjusted)
+
+cum_uw = (1 + pr).cumprod()
+under = cum_uw < cum_uw.cummax()
+dd_obs = int(under.groupby((~under).cumsum()).sum().max())   # longest underwater stretch (trading days)
+
+print("\n=== Higher-order & alpha-quality metrics ===")
+print(f"  Skewness               {skew:+.2f}    (negative = crash-prone left tail)")
+print(f"  Excess kurtosis        {exkurt:+.2f}    (>0 = fatter tails than a bell curve)")
+print(f"  Omega ratio (0%)       {omega:.2f}    (probability-weighted gains vs losses; >1 good)")
+print(f"  Tail ratio             {tail_ratio:.2f}    (right tail / left tail; >1 = bigger up-extremes)")
+print(f"  M-squared (at ACWI risk) {m2:.1%}  (Sharpe priced at ACWI vol; M2-alpha {m2_alpha:+.1%} vs ACWI {bm_cagr:.1%})")
+print(f"  Appraisal ratio        {appraisal:.2f}    (factor-alpha per unit of stock-specific risk)")
+print(f"  Cornish-Fisher VaR95   {var95_cf:.1%}    (skew/kurtosis-adjusted; historical {var95:.1%})")
+print(f"  Longest drawdown       {dd_obs} trading days (~{dd_obs / 21:.0f} months underwater)")
+
+# returns distribution vs a normal bell curve (illustrates skew & fat tails)
+fig, ax = plt.subplots(figsize=(9, 3.4))
+ax.hist(pr.values * 100, bins=60, density=True, color="#60a5fa", alpha=0.6, label="Your daily returns")
+xs = np.linspace(pr.min(), pr.max(), 200)
+ax.plot(xs * 100, sstats.norm.pdf(xs, pr.mean(), pr.std()) / 100, color="#f87171", lw=1.8,
+        label="Normal bell curve (same mean/vol)")
+ax.axvline(np.percentile(pr, 5) * 100, color="#94a3b8", ls="--", lw=1, label=f"Hist. VaR95 -{var95 * 100:.1f}%")
+ax.set_title(f"Daily return distribution - skew {skew:+.2f}, excess kurtosis {exkurt:+.2f}")
+ax.set_xlabel("daily return (%)"); ax.legend(fontsize=8); ax.grid(alpha=0.15)
+fig.tight_layout(); fig.savefig(OUT / "returns_hist.png", dpi=130)
+print("Saved: returns_hist.png")
+
+# %%
 # --- exposure by region (look-through on the fund) ---
 REGION = {"ORCL": "US", "MSTR": "US", "CEG": "US", "QBTS": "US", "IONQ": "US", "NNDM": "US",
           "ORGN": "US", "MUFG": "Japan", "BZ": "China", "TMC": "Global", "VWO": "EM", "SLV": "Commodity",

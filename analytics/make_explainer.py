@@ -90,6 +90,9 @@ piece from scratch.</p>
 <li><a href="#s4">Stage 4: the professional risk metrics</a></li>
 <li><a href="#mc">Stage 5: Monte Carlo, your year ahead in 10,000 futures</a></li>
 <li><a href="#verdict">What it all means, and what to consider doing</a></li>
+<li><a href="#gaps">Where you are under-exposed, and a watchlist</a></li>
+<li><a href="#road">The road ahead: what to do with this portfolio</a></li>
+<li><a href="#missing">Metrics and methods you are not yet using</a></li>
 <li><a href="#caveats">The honest caveats</a></li>
 <li><a href="#glossary">Glossary</a></li>
 </ol></div>
@@ -114,6 +117,7 @@ them with CAPM rather than trusting the past.</p>
 <tr><td>Beta, tracking error, information ratio vs ACWI</td><td>Ex-post</td><td>How you actually did against the benchmark.</td></tr>
 <tr><td>Treynor, Jensen's alpha, up/down capture, hit rate</td><td>Ex-post</td><td>Risk-adjusted skill, capture and consistency, all read off the realised record.</td></tr>
 <tr><td>Factor exposures and R²</td><td>Ex-post</td><td>Which style bets actually drove your past returns.</td></tr>
+<tr><td>Skew, kurtosis, Omega, tail ratio, M², appraisal, drawdown duration</td><td>Ex-post</td><td>A deeper read of the shape of your realised returns and the quality of your alpha.</td></tr>
 <tr><td>Backtest (current +155% vs optimised +123%)</td><td>Ex-post</td><td>How the mixes would have performed over the window.</td></tr>
 <tr><td>Historical-average μ, bootstrap simulation</td><td>Ex-post</td><td>Pure history, shown only for comparison.</td></tr>
 </tbody></table>
@@ -448,45 +452,57 @@ reward. The rosier bootstrap result (only a 7% chance of loss) just assumes the 
 the last three, so treat it as the optimistic bookend, not the base case.</div>
 
 <h2 id="verdict">7. What it all means, and what to consider doing</h2>
-<p>Here is the plain-English "so what" for each measure, then a short list of options your numbers
-point to. None of this is advice; it is what the analysis suggests, and the decisions are yours.</p>
-<h3>What each number implies for you</h3>
-<table><thead><tr><th>Measure</th><th>Your number</th><th>What it means for you</th></tr></thead><tbody>
-<tr><td>Sharpe ratio</td><td>0.76 (0.90 reachable)</td><td>A fair reward for your risk, but you are leaving some on the table; the same risk could earn more.</td></tr>
-<tr><td>Sortino ratio</td><td>2.19</td><td>Much of your "risk" is upside surprise, not real pain. Your downside is well paid.</td></tr>
-<tr><td>Max drawdown / Calmar</td><td>−18% / 1.91</td><td>Be ready to see the book ~18% below a peak, maybe more ahead. The reward for that pain is healthy.</td></tr>
-<tr><td>VaR 99%, one day</td><td>−$1,650</td><td>On a 1-in-100 bad day you could drop about $1,650. Make sure that never forces a panic sale.</td></tr>
-<tr><td>Expected Shortfall 99%</td><td>−$2,370</td><td>When a bad day does land, the average is worse than VaR alone. The tail bites harder than it looks.</td></tr>
-<tr><td>Beta vs world stocks</td><td>1.09</td><td>You fall slightly more than global equities in a sell-off, not less.</td></tr>
-<tr><td>Tracking error</td><td>13.1%</td><td>You stray a long way from a plain index. You are making active bets, for better or worse.</td></tr>
-<tr><td>Information ratio</td><td>1.02</td><td>Those bets paid off over the window. That is history, not a promise.</td></tr>
-<tr><td>Treynor ratio</td><td>0.29</td><td>Per unit of market risk you earned nearly double what the index did. Strong, if it persists.</td></tr>
-<tr><td>Jensen's alpha</td><td>+14.2%</td><td>Most of your return is not just market risk; there was genuine edge here, over this window.</td></tr>
-<tr><td>Up / down capture</td><td>179% / 97%</td><td>You amplify rallies and barely cushion falls. Brilliant in a boom, punishing if the trend turns.</td></tr>
-<tr><td>Hit rate</td><td>74% positions / 65% months</td><td>Gains are broad and fairly steady, not one fluke carrying the book.</td></tr>
-<tr><td>Concentration (HHI)</td><td>3.1 (12.1 look-through)</td><td>The real concentration is half your money in one product. The fund diversifies inside, so the fix is to not let it grow, not to panic.</td></tr>
-<tr><td>Factor tilt</td><td>small-cap, low quality</td><td>You are making a speculative bet. In a flight to safety this profile tends to lag.</td></tr>
-<tr><td>Equity −20% stress</td><td>−$8,800</td><td>A normal-sized bad market costs you roughly this. Size positions so it does not derail your plan.</td></tr>
-<tr><td>Monte Carlo chance of loss</td><td>~20% (bad case −$7,900)</td><td>About a 1-in-5 chance of a down year. Decide now whether you can sit through that calmly.</td></tr>
+<p>Here is the plain-English "so what" for each measure — now with a concrete <em>action</em> beside it —
+then which positions to trim, how to rebalance, and the warning signs to watch. None of this is advice;
+it is what the analysis suggests, and the decisions are yours.</p>
+<h3>What each number implies for you, and what to do</h3>
+<table><thead><tr><th>Measure</th><th>Your number</th><th>What it means for you</th><th>Action</th></tr></thead><tbody>
+<tr><td>Sharpe ratio</td><td>0.76 (0.90 reachable)</td><td>A fair reward for your risk, but you are leaving some on the table; the same risk could earn more.</td><td>Move part-way to the optimised mix to lift Sharpe without cutting return.</td></tr>
+<tr><td>Sortino ratio</td><td>2.19</td><td>Much of your "risk" is upside surprise, not real pain. Your downside is well paid.</td><td>No change — this is a feature, not a problem.</td></tr>
+<tr><td>Max drawdown / Calmar</td><td>−18% / 1.91</td><td>Be ready to see the book ~18% below a peak, maybe more ahead. The reward for that pain is healthy.</td><td>Keep enough cash that an 18–25% dip never forces a sale.</td></tr>
+<tr><td>VaR / ES 99%, one day</td><td>−$1,650 / −$2,370</td><td>On a 1-in-100 day you lose ~$1,650; when it lands, the average is ~$2,370. The tail bites harder than VaR alone.</td><td>Size positions so a tail day is annoying, not destabilising.</td></tr>
+<tr><td>Beta vs world stocks</td><td>1.09</td><td>You fall slightly more than global equities in a sell-off, not less.</td><td>Add defensives if you want beta nearer 1.0.</td></tr>
+<tr><td>Tracking error / Information ratio</td><td>13.1% / 1.02</td><td>You stray far from the index, and those active bets paid off — over this window.</td><td>Take big deviations only where you have real conviction.</td></tr>
+<tr><td>Treynor / Jensen's alpha</td><td>0.29 / +14.2%</td><td>Per unit of market risk you roughly doubled the index, with genuine alpha on top.</td><td>Protect what's working; don't dilute the winners when you trim.</td></tr>
+<tr><td>Up / down capture</td><td>179% / 97%</td><td>You amplify rallies and barely cushion falls — brilliant in a boom, punishing if the trend turns.</td><td>Lower down-capture with the quality/defensive names below.</td></tr>
+<tr><td>Hit rate</td><td>74% positions / 65% months</td><td>Gains are broad and fairly steady, not one fluke carrying the book.</td><td>Keep breadth as you rebalance; don't over-concentrate.</td></tr>
+<tr><td>Concentration (HHI)</td><td>3.1 (12.1 look-through)</td><td>The real concentration is half your money in one product. The fund diversifies inside.</td><td>Cap the Syfe fund's share; don't let new money pile into it.</td></tr>
+<tr><td>Factor tilt</td><td>small-cap, low quality</td><td>A speculative bet that tends to lag in a flight to safety.</td><td>Add quality and large-cap to balance the tilt (watchlist below).</td></tr>
+<tr><td>Equity −20% stress</td><td>−$8,800</td><td>A normal-sized bad market costs you roughly this.</td><td>Pre-decide your response so a −$8k month isn't a shock.</td></tr>
+<tr><td>Monte Carlo chance of loss</td><td>~20% (bad case −$7,900)</td><td>About a 1-in-5 chance of a down year.</td><td>If that's uncomfortable, shift toward the optimised mix.</td></tr>
 </tbody></table>
 
-<h3>Options the analysis points to</h3>
-<p>Three independent methods, the optimiser, the risk decomposition, and the simulation, agree on the
-same handful of moves. In rough priority:</p>
-<ol>
-<li>Trim your two biggest risk hogs, Bitcoin and silver. Stage 3 shows both use more of your risk
-budget than they return. They are the clearest "too much risk for the reward" positions.</li>
-<li>Shrink the crypto sleeve. You hold about 16%; the optimiser wants nearer 3%, and the six coins are
-so correlated (the red block in the heatmap) that they behave like one bet, not six.</li>
-<li>Do not let the Syfe fund grow past a level you are comfortable with. At 53% it is a single-product
-dependence. It is a good, efficient holding, so this is about concentration, not quality.</li>
-<li>Add the cheap diversifiers the optimiser favours: emerging markets (VWO), the Japanese bank (MUFG),
-and some higher-quality names. They lift your Sharpe and soften the speculative, low-quality tilt.</li>
-<li>Match the risk to your stomach. The simulation puts roughly a 1-in-5 chance on a down year and a
-−$8,000 bad case. If that is fine, your aggressive book is a coherent bet that the boom continues. If
-it is not, move toward the optimised mix, which trades a little expected return for far fewer bad
-years.</li>
-</ol>
+<h3>Which positions to trim or cut, and why</h3>
+<p>Three independent methods — the optimiser, the risk decomposition (Stage 3), and the simulation —
+point at the same names. The test is simple: is a position eating more of your risk budget than it
+pays back?</p>
+<table><thead><tr><th>Position</th><th>Now</th><th>The issue</th><th>Suggested</th></tr></thead><tbody>
+<tr><td><strong>Bitcoin</strong></td><td>largest coin</td><td>Your single biggest risk hog: high volatility, and it moves with the other coins, so it adds little diversification for the risk it costs.</td><td>Trim hard</td></tr>
+<tr><td><strong>Silver (SLV)</strong></td><td>~16% (commodity)</td><td>Stage 3's other risk hog — uses more of your risk budget than it returns on a forward basis.</td><td>Trim</td></tr>
+<tr><td><strong>Crypto sleeve (6 coins)</strong></td><td>~16%</td><td>So correlated (the red block in the heatmap) that the six behave like one bet, not six. The optimiser wants nearer 3%.</td><td>Cut toward ~5–8%</td></tr>
+<tr><td><strong>Syfe Core Equity100</strong></td><td>~53%</td><td>Not a quality problem — it's efficient and diversified inside — but it's a single-product dependence.</td><td>Cap, don't grow</td></tr>
+</tbody></table>
+<p>The honest caveat (see the box below): these are the names that <em>soared</em>, so trimming them
+would have lowered your past return. The case for trimming is forward-looking risk control, not a
+prediction that they will fall.</p>
+
+<h3>How to rebalance, in practice</h3>
+<ul>
+<li><strong>Use bands, not a calendar.</strong> Set a target weight per sleeve (say crypto 8%, Syfe 45%) and only act when a holding drifts more than ~5 percentage points off target. Less needless trading.</li>
+<li><strong>Rebalance with new money first.</strong> Direct fresh contributions into the under-weight sleeves (healthcare, quality, ex-US) rather than selling winners — it avoids tax and fees entirely.</li>
+<li><strong>Trim gradually.</strong> Scale out of Bitcoin and silver in steps, not one trade. You keep some upside if the boom runs, while steadily de-risking.</li>
+<li><strong>Mind the FX.</strong> You hold USD assets and live in SGD; rebalancing across the two adds an FX leg each time. Batch trades to limit conversion spread.</li>
+<li><strong>Net off costs and tax.</strong> Singapore has no capital-gains tax, which helps — but spreads, platform fees and US dividend withholding still apply. Subtract them from any expected gain before you trade.</li>
+</ul>
+
+<h3>Warning signs — when rebalancing can hurt</h3>
+<ul>
+<li><strong>Selling winners into a trend.</strong> Momentum is real; trimming a runner too early has a cost. Bands and gradual exits guard against it.</li>
+<li><strong>Chasing the optimiser's exact numbers.</strong> Small changes in the return guesses swing the "optimal" weights wildly. Trust the <em>direction</em> (less crypto, more quality), not the decimals.</li>
+<li><strong>Over-trading.</strong> Every rebalance costs spread and fees. If the benefit is smaller than the cost, don't.</li>
+<li><strong>Acting on noise.</strong> A 2% wobble is not a signal. Wait for the band breach.</li>
+<li><strong>Forgetting why you own it.</strong> If the thesis is intact, a dip is not a reason to sell — and a spike is not, by itself, a reason to buy more.</li>
+</ul>
 <div class="box warn"><div class="h">The honest tension, and a disclaimer</div>
 Over the last three years your riskier current book (+155%) beat the optimised one (+123%), because the
 optimiser trims exactly the crypto and silver that soared. The optimiser lowers risk; it does not
@@ -494,7 +510,95 @@ promise higher returns. So the real decision is your own view on whether the nex
 the way the last few did. And to be clear: this is analysis, not financial advice. I am not a licensed
 adviser, and every decision here is yours to make.</div>
 
-<h2 id="caveats">8. The honest caveats</h2>
+<h2 id="gaps">8. Where you are under-exposed, and a watchlist</h2>
+<p>Your look-through exposure says what you <em>don't</em> own as loudly as what you do. The map: 46%
+United States, ~16% silver, ~16% crypto, 11% developed markets ex-US, 5% emerging, 3% China — and
+almost nothing in Japan. By sector and style you tilt to small, speculative, lower-quality growth, with
+<strong>no meaningful healthcare, no energy, and no defensive ballast.</strong> Those are exactly the
+things that hold up when the speculative trade breaks.</p>
+<table><thead><tr><th>Gap</th><th>Why it matters</th><th>Fills it</th></tr></thead><tbody>
+<tr><td>Healthcare</td><td>Defensive demand, an ageing world, currently out of favour — the classic ballast you lack.</td><td>UNH, XLV</td></tr>
+<tr><td>Energy</td><td>An inflation and geopolitics hedge that pays you to wait via dividends. Zero exposure today.</td><td>XLE, CVX</td></tr>
+<tr><td>Quality / defensives</td><td>Directly offsets your "low quality" factor tilt and your 179%-up / 97%-down profile.</td><td>BRK-B, quality ETFs (QUAL)</td></tr>
+<tr><td>Developed ex-US / Japan</td><td>Cheap diversification; Japan is ~0% of your book today.</td><td>EFA (held inside Syfe), MUFG</td></tr>
+</tbody></table>
+
+<h3>The watchlist, with live numbers</h3>
+<p>A quick, current read (prices to 18 Jun 2026, pulled live; valuations approximate). These are
+candidates to <em>research</em>, not recommendations.</p>
+<table><thead><tr><th>Ticker</th><th>What</th><th>Price</th><th>YTD / 1Y</th><th>Yield</th><th>The one-line thesis</th></tr></thead><tbody>
+<tr><td><strong>UNH</strong></td><td>UnitedHealth — health insurer</td><td>$401</td><td>+21% / +37%</td><td>~2.3%</td><td>Quality compounder that de-rated on one-off legal and Medicare scares; forward P/E ~19 vs trailing ~30 says the market expects an earnings rebound. Still below its old highs.</td></tr>
+<tr><td><strong>XLV</strong></td><td>US health-care sector ETF</td><td>$149</td><td>−4% / +15%</td><td>~1.7%</td><td>The whole sector in one ticker — diversifies the single-stock risk of UNH while filling the same gap.</td></tr>
+<tr><td><strong>XLE</strong></td><td>US energy sector ETF</td><td>$54</td><td>+19% / +28%</td><td>~2.6%</td><td>Broad energy in one line; an inflation and geopolitics hedge your book completely lacks.</td></tr>
+<tr><td><strong>CVX</strong></td><td>Chevron — integrated oil major</td><td>$174</td><td>+14% / +23%</td><td>~4.1%</td><td>Cheap (forward P/E ~14), pays ~4% to hold, defensive within energy. Income and ballast in one.</td></tr>
+<tr><td><strong>BRK-B</strong></td><td>Berkshire Hathaway — quality holding co.</td><td>$489</td><td>−2% / +0%</td><td>—</td><td>Low-beta quality ballast — flat over the past year precisely because it doesn't chase the boom. That is the point: it cushions a downturn.</td></tr>
+</tbody></table>
+
+<h4>A quick read on the two industries you named</h4>
+<p><strong>Healthcare</strong> has lagged (the sector ETF is −4% this year while the S&P 500 is +10%),
+which is what makes it interesting: defensive, cash-generative businesses on sale because sentiment
+soured on drug pricing and Medicare politics. UNH is the bellwether — its +37% over the past year is a
+recovery from a brutal de-rating, and the gap between its trailing (~30) and forward (~19) P/E is the
+market betting earnings normalise. The risk is that the legal and regulatory overhang lingers. As a
+gap-filler it is close to ideal: it zigs when your speculative growth names zag.</p>
+<p><strong>Energy</strong> has done the opposite — the sector is +28% over a year on firm oil and its
+role as an inflation hedge. The appeal for <em>you</em> is diversification and income: energy has a low
+correlation with your tech-and-crypto cluster, and names like Chevron pay ~4% dividends. The risks are
+cyclicality (energy falls hard in a recession) and the long-run energy-transition question. A sector
+ETF (XLE) spreads the single-name risk; CVX adds a cheap, high-yield anchor.</p>
+
+<h2 id="road">9. The road ahead: what to do with this portfolio</h2>
+<p>Beyond the immediate rebalance, a sensible progression — roughly in order:</p>
+<ol>
+<li><strong>Set a target allocation and rebalancing bands.</strong> Decide the sleeves (e.g. global equity via Syfe ~45%, single-stock satellites, crypto ≤8%, a new defensive/quality sleeve ~10–15%) and let the bands trigger trades. This turns ad-hoc decisions into a rule you can follow under stress.</li>
+<li><strong>Build the defensive sleeve.</strong> Phase in healthcare, energy and quality from the watchlist using new contributions. The goal: pull your down-capture below 100% and beta toward 1.0 without giving up much upside.</li>
+<li><strong>Add an income / ballast layer as the book grows.</strong> Short-dated Treasuries or a money-market holding (yielding ~4–5% now) give you dry powder for the next drawdown and lower whole-portfolio volatility.</li>
+<li><strong>Start the options journey deliberately.</strong> You are building toward derivatives — the two lowest-risk first steps fit your book perfectly:
+  <ul>
+  <li><strong>Covered calls</strong> on a position you would happily trim: sell upside you don't mind giving up, collect the premium.</li>
+  <li><strong>Protective puts</strong> on your most volatile names: cheap, defined insurance against the fat left tail the kurtosis flagged.</li>
+  </ul>
+  Both are <em>risk-reducing</em> uses of options. Learn these before anything that adds leverage.</li>
+<li><strong>Instrument the portfolio.</strong> Track the metrics in this report over time, not just once. A rising tracking error or a falling hit rate is an early warning that your edge is fading.</li>
+<li><strong>Revisit the estimates quarterly.</strong> Re-run μ/Σ and the optimiser each quarter, and after any large contribution or market move. The three-year window slowly takes in the next regime, and the numbers will shift with it.</li>
+</ol>
+
+<h2 id="missing">10. Metrics and methods you are not yet using</h2>
+<p>Your toolkit is strong on the basics but blind in three places: the <em>shape</em> of your returns
+(not just their average and spread), the <em>quality</em> of your alpha, and how <em>long</em> you stay
+in pain. I have added the cheap, high-value ones to the notebook — here they are on your data.</p>
+{{IMG:returns_hist.png|Your actual daily returns (blue) against a normal bell curve with the same average and spread (red). The taller peak and the fatter edges are the "fat tails": extreme days, good and bad, happen more often than a bell curve assumes.}}
+<table><thead><tr><th>Metric</th><th>You</th><th>What it adds</th></tr></thead><tbody>
+<tr><td>Skewness</td><td>−0.29</td><td>Your returns lean slightly toward crash-style down-days — a mild negative skew the Sharpe ratio cannot see.</td></tr>
+<tr><td>Excess kurtosis</td><td>+3.05</td><td>Fat tails: extreme days (both directions) are far more common than a bell curve predicts. Your risk lives in the tails.</td></tr>
+<tr><td>Omega ratio</td><td>1.31</td><td>Weighing every gain against every loss, you make $1.31 for each $1 you lose — a fuller picture than Sharpe.</td></tr>
+<tr><td>Tail ratio</td><td>1.15</td><td>Your biggest up-days slightly beat your biggest down-days: a mild edge even in the extremes.</td></tr>
+<tr><td>M² (at market risk)</td><td>25.8%</td><td>Dialled down to the market's volatility, your skill still translates to a 25.8% return — about +6.3% over the index, risk-matched.</td></tr>
+<tr><td>Appraisal ratio</td><td>1.03</td><td>Your alpha per unit of stock-specific risk. Near 1.0 is institutional-grade — the edge is real, not just extra beta.</td></tr>
+<tr><td>Cornish-Fisher VaR</td><td>−2.0%</td><td>The normal-curve VaR (−1.8%) understates the danger; adjusting for your skew and fat tails widens the daily loss to −2.0%.</td></tr>
+<tr><td>Longest drawdown</td><td>~5 months</td><td>The longest you sat below a previous peak (102 trading days). The −18% depth is only half the story; this is the <em>duration</em> of the pain.</td></tr>
+</tbody></table>
+<p>Two small formulae worth knowing. The Omega ratio weighs gains against losses around a threshold
+\( \tau \):</p>
+\[ \Omega(\tau) = \frac{\int_\tau^{\infty}\big(1-F(r)\big)\,dr}{\int_{-\infty}^{\tau}F(r)\,dr} \]
+<p>and M² rescales your Sharpe to the benchmark's risk, so you can compare in plain return terms:</p>
+\[ M^2 = R_f + \text{Sharpe}_p \times \sigma_{\text{benchmark}} = 4\% + 1.54 \times 14.2\% \approx 25.8\% \]
+
+<h3>Bigger methods worth graduating to</h3>
+<p>These need more setup, but each fixes a real limitation of what you have now:</p>
+<table><thead><tr><th>Method</th><th>What it fixes</th></tr></thead><tbody>
+<tr><td><strong>Black-Litterman</strong></td><td>Blends <em>your</em> views with the market's implied returns, so the optimiser stops producing extreme weights from noisy μ guesses. The single biggest upgrade to your Stage 2.</td></tr>
+<tr><td><strong>CVaR / tail optimisation</strong></td><td>Optimises against expected shortfall (the fat left tail) instead of variance — a better fit for a book with +3 kurtosis like yours.</td></tr>
+<tr><td><strong>Performance attribution (Brinson)</strong></td><td>Splits your return into how much came from <em>where</em> you allocated vs <em>which</em> names you picked. Tells you whether the edge is selection or luck.</td></tr>
+<tr><td><strong>Regime / fat-tailed Monte Carlo</strong></td><td>Your current simulation assumes calm, normal days. Student-t or regime-switching paths build in crashes — more honest tail estimates.</td></tr>
+<tr><td><strong>Factor risk model</strong></td><td>Decompose <em>risk</em> (not just return) into factor exposures, so you see which bets drive your volatility, not only your performance.</td></tr>
+<tr><td><strong>Transaction-cost & turnover modelling</strong></td><td>Charges for every trade, turning "the optimiser wins on paper" into a net-of-costs answer.</td></tr>
+<tr><td><strong>Liquidity & bespoke scenario stress</strong></td><td>Beyond market shocks: how fast could you exit, and tailored scenarios (a rate spike, a crypto winter) built on your actual holdings.</td></tr>
+</tbody></table>
+<p>Of these, <strong>Black-Litterman</strong> and <strong>CVaR optimisation</strong> would give you the
+most for the least effort. I can build either into the notebook when you want.</p>
+
+<h2 id="caveats">11. The honest caveats</h2>
 <p>A few things to keep in mind so you read the numbers with the right amount of trust.</p>
 <p>Optimisers are very sensitive to the return guesses you feed them. Small changes in μ swing the
 recommended weights hard, which is why the trustworthy signal is the <em>direction</em> (you are
@@ -507,7 +611,7 @@ from a handful of points. It still sits in your portfolio, just not in this anal
 thing assumes today's holdings were held throughout, since there is no trade history, so it is a
 "what your current basket would have done," not your exact past account.</p>
 
-<h2 id="glossary">9. Glossary</h2>
+<h2 id="glossary">12. Glossary</h2>
 <table><thead><tr><th>Term</th><th>Plain meaning</th></tr></thead><tbody>
 <tr><td>Return</td><td>Percentage change in price from one day to the next.</td></tr>
 <tr><td>μ (mu)</td><td>Expected future return, one per holding.</td></tr>
@@ -534,6 +638,16 @@ thing assumes today's holdings were held throughout, since there is no trade his
 <tr><td>Hit rate</td><td>The fraction of positions (or months) that are positive; a breadth check.</td></tr>
 <tr><td>HHI</td><td>A concentration score; its reciprocal is the effective number of holdings.</td></tr>
 <tr><td>Factor exposure</td><td>How much of your return is explained by common style bets.</td></tr>
+<tr><td>Skewness</td><td>Whether returns lean toward big up-days (positive) or big down-days (negative).</td></tr>
+<tr><td>Kurtosis (excess)</td><td>How fat the tails are; above 0 means extreme days are more common than a bell curve.</td></tr>
+<tr><td>Omega ratio</td><td>Probability-weighted gains divided by losses around a threshold; above 1 is good.</td></tr>
+<tr><td>Tail ratio</td><td>The size of your biggest up-moves versus your biggest down-moves.</td></tr>
+<tr><td>M² (Modigliani)</td><td>Your Sharpe expressed as a return, priced at the benchmark's volatility, for a like-for-like compare.</td></tr>
+<tr><td>Appraisal ratio</td><td>Factor-model alpha per unit of stock-specific risk; a measure of skill.</td></tr>
+<tr><td>Cornish-Fisher VaR</td><td>A VaR adjusted for skew and fat tails, so it isn't fooled by the bell-curve assumption.</td></tr>
+<tr><td>Drawdown duration</td><td>How long, not just how far, you stay below a previous peak.</td></tr>
+<tr><td>Black-Litterman</td><td>A method that blends your own views with the market's implied returns for steadier optimisation.</td></tr>
+<tr><td>CVaR optimisation</td><td>Optimising against the average tail loss instead of variance; better for fat-tailed books.</td></tr>
 </tbody></table>
 """
 
