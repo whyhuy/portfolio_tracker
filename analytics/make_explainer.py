@@ -93,6 +93,7 @@ piece from scratch.</p>
 <li><a href="#gaps">Where you are under-exposed, and a watchlist</a></li>
 <li><a href="#road">The road ahead: what to do with this portfolio</a></li>
 <li><a href="#missing">Metrics and methods you are not yet using</a></li>
+<li><a href="#adv">The advanced methods, applied to your book</a></li>
 <li><a href="#caveats">The honest caveats</a></li>
 <li><a href="#glossary">Glossary</a></li>
 </ol></div>
@@ -118,6 +119,8 @@ them with CAPM rather than trusting the past.</p>
 <tr><td>Treynor, Jensen's alpha, up/down capture, hit rate</td><td>Ex-post</td><td>Risk-adjusted skill, capture and consistency, all read off the realised record.</td></tr>
 <tr><td>Factor exposures and R²</td><td>Ex-post</td><td>Which style bets actually drove your past returns.</td></tr>
 <tr><td>Skew, kurtosis, Omega, tail ratio, M², appraisal, drawdown duration</td><td>Ex-post</td><td>A deeper read of the shape of your realised returns and the quality of your alpha.</td></tr>
+<tr><td>Stage 6: Black-Litterman, CVaR optimisation, regime Monte Carlo, scenario stress</td><td>Ex-ante</td><td>Forward-looking portfolio decisions and tail-risk estimates.</td></tr>
+<tr><td>Stage 6: return attribution, factor-risk decomposition</td><td>Ex-post</td><td>What actually drove your realised return and your realised risk.</td></tr>
 <tr><td>Backtest (current +155% vs optimised +123%)</td><td>Ex-post</td><td>How the mixes would have performed over the window.</td></tr>
 <tr><td>Historical-average μ, bootstrap simulation</td><td>Ex-post</td><td>Pure history, shown only for comparison.</td></tr>
 </tbody></table>
@@ -584,8 +587,9 @@ in pain. I have added the cheap, high-value ones to the notebook — here they a
 <p>and M² rescales your Sharpe to the benchmark's risk, so you can compare in plain return terms:</p>
 \[ M^2 = R_f + \text{Sharpe}_p \times \sigma_{\text{benchmark}} = 4\% + 1.54 \times 14.2\% \approx 25.8\% \]
 
-<h3>Bigger methods worth graduating to</h3>
-<p>These need more setup, but each fixes a real limitation of what you have now:</p>
+<h3>Bigger methods — now built into the notebook</h3>
+<p>These were a wishlist; they are now all implemented in Stage 6. Each fixes a real limitation of what
+you had. <a href="#adv">Section 11</a> walks through what every one of them found on your actual book.</p>
 <table><thead><tr><th>Method</th><th>What it fixes</th></tr></thead><tbody>
 <tr><td><strong>Black-Litterman</strong></td><td>Blends <em>your</em> views with the market's implied returns, so the optimiser stops producing extreme weights from noisy μ guesses. The single biggest upgrade to your Stage 2.</td></tr>
 <tr><td><strong>CVaR / tail optimisation</strong></td><td>Optimises against expected shortfall (the fat left tail) instead of variance — a better fit for a book with +3 kurtosis like yours.</td></tr>
@@ -595,10 +599,84 @@ in pain. I have added the cheap, high-value ones to the notebook — here they a
 <tr><td><strong>Transaction-cost & turnover modelling</strong></td><td>Charges for every trade, turning "the optimiser wins on paper" into a net-of-costs answer.</td></tr>
 <tr><td><strong>Liquidity & bespoke scenario stress</strong></td><td>Beyond market shocks: how fast could you exit, and tailored scenarios (a rate spike, a crypto winter) built on your actual holdings.</td></tr>
 </tbody></table>
-<p>Of these, <strong>Black-Litterman</strong> and <strong>CVaR optimisation</strong> would give you the
-most for the least effort. I can build either into the notebook when you want.</p>
+<p>Of these, <strong>Black-Litterman</strong> and <strong>CVaR optimisation</strong> give you the most
+for the least effort, and are the two worth keeping in regular use.</p>
 
-<h2 id="caveats">11. The honest caveats</h2>
+<h2 id="adv">11. The advanced methods, applied to your book</h2>
+<p>The seven methods from the wishlist above are now built into the notebook (Stage 6). Here is what
+each one says about your actual portfolio — the tools that turn good retail analysis into something
+closer to a desk process.</p>
+
+<h3>1 — Black-Litterman: steadier optimiser inputs</h3>
+<p>The plain optimiser is famously twitchy: feed it noisy return guesses and it lurches to extreme
+weights. Black-Litterman fixes that by starting from the returns your current book <em>implies</em>,
+then nudging them with a few explicit <em>views</em> of yours. I encoded three views that mirror your
+trim signals — the crypto sleeve returns only 8%, silver only 6%, and quality (MUFG) beats crypto by
+5%. The result is a <em>more</em> diversified optimal portfolio: effective holdings rise from
+<span class="num">6.0</span> (plain optimiser) to <span class="num">7.1</span>, without the wild swings.</p>
+{{IMG:adv_bl.png|Current weights (red) vs the plain max-Sharpe optimiser (green) vs Black-Litterman (blue). BL's weights are smoother and less extreme — it won't bet the farm on a single noisy estimate.}}
+
+<h3>2 — CVaR optimisation: minimise the fat tail, not the wobble</h3>
+<p>Mean-variance treats an upside surprise and a crash as equally "risky." CVaR optimisation instead
+minimises the <em>expected shortfall</em> — the average of your worst days — which is what you actually
+fear. On your data it cuts the daily 95% shortfall from <span class="num">2.84%</span> (current) to
+<span class="num">2.31%</span>, a shade below even the min-variance portfolio, while holding crypto under
+8%. For a book with fat tails like yours (+3 kurtosis), this is the more honest objective.</p>
+{{IMG:adv_cvar.png|Daily 95% expected shortfall (the average worst-day loss) for your current book, the min-variance portfolio, and the min-CVaR portfolio. CVaR optimisation targets the tail directly.}}
+
+<h3>3 — Return attribution: where your +155% actually came from</h3>
+<p>This splits your three-year return into each position's contribution, and then into
+<em>allocation</em> (the decision to hold off-index assets like crypto) versus <em>selection</em> (your
+equity picks beating the index). The verdict is striking: of your outperformance versus global stocks,
+about <span class="num">+43%</span> came from selection and only <span class="num">+9%</span> from the
+crypto allocation. <strong>Your edge is stock-picking, not the crypto bet</strong> — worth knowing
+before you decide what to trim.</p>
+{{IMG:adv_attribution.png|Each position's contribution to your total return (green positive, red negative). The Syfe fund, silver and a handful of single stocks did the heavy lifting.}}
+<p class="small">Contributions use constant current weights, so they sum to roughly 124% rather than the
+compounded 155% — the gap is the compounding of a moving book. Read the ranking, not the decimals.</p>
+
+<h3>4 — Factor risk decomposition: what drives your volatility</h3>
+<p>Stage 4 told you which factors drove your <em>returns</em>; this tells you which drive your
+<em>risk</em>. Nearly half your volatility — <span class="num">47%</span> — is simply the market moving.
+The style factors (size, value, momentum, quality) add another <span class="num">~16%</span>, and the
+remaining <span class="num">37%</span> is stock-specific: the idiosyncratic bets you have chosen. So you
+are roughly two-thirds "the market and styles" and one-third "your own picks."</p>
+{{IMG:adv_factor_risk.png|Your portfolio variance split by source. The market factor dominates; about a third is stock-specific risk you could diversify away if you chose to.}}
+
+<h3>5 — Fat-tailed & regime Monte Carlo: the honest crash</h3>
+<p>Stage 5 rolled the dice assuming calm, normal days. Two more realistic engines: a <em>Student-t</em>
+that fattens the daily tails, and a <em>regime-switching</em> model that spends 10% of its days in a
+high-volatility "crisis." The surprise is that the Student-t looks almost identical to the normal over a
+year — daily fat tails diversify away. The regime model does not: it pushes your bad-case (5th
+percentile) year from <span class="num">−15%</span> to <span class="num">−28%</span>, and your chance of
+a losing year from <span class="num">20%</span> to <span class="num">35%</span>. The lesson: it isn't fat
+<em>daily</em> tails that hurt over a year — it's sustained crises.</p>
+{{IMG:adv_montecarlo.png|Three one-year simulations. Normal (grey) and Student-t (blue) almost overlap; the regime-switching model (red) has a visibly heavier left tail — the realistic crash risk.}}
+
+<h3>6 — Transaction costs & turnover: the edge, net of trading</h3>
+<p>Every rebalance costs spread and fees, which the paper backtest ignores. Charging a sensible
+per-class cost, moving to the optimised mixes costs only <span class="num">0.15–0.21%</span> one-off
+(you are small and liquid), with a rough <span class="num">0.6–0.8%/yr</span> drag if you rebalanced
+quarterly. Black-Litterman is the cheapest to implement (lowest turnover). The edge survives costs here —
+but this is exactly how you would check whether a fancier strategy is worth the friction.</p>
+{{IMG:adv_costs.png|Turnover (how much you would trade) and the rough annual cost drag for reaching each target portfolio. Black-Litterman moves the least.}}
+
+<h3>7 — Liquidity & bespoke scenarios</h3>
+<p>Two final desk checks. <strong>Liquidity:</strong> at 20% of daily volume, every single-name position
+exits <em>same-day</em> — your positions are tiny next to how much trades, so you carry no liquidity
+risk. <strong>Bespoke scenarios:</strong> beyond a generic market shock, tailored crises tell you more.
+A US recession would cost about <span class="num">−$18k</span> (−36%), a crypto winter
+<span class="num">−$7.8k</span>, and a 2008-style meltdown around <span class="num">−$25k</span> (−49%).
+Stagflation is the mildest, because your silver actually helps. These are the numbers to make peace with
+<em>before</em> they happen.</p>
+{{IMG:adv_scenarios.png|Estimated portfolio loss under five tailored crises. The broad-equity events (recession, 2008-style) hurt most because most of your money is equity-like.}}
+
+<div class="box you"><div class="h">The one-line summary of Stage 6</div>
+Your edge is real and mostly stock-selection; your risk is mostly market beta with a fat,
+regime-driven tail; you are fully liquid; and the optimiser's improvements survive trading costs.
+Black-Litterman and CVaR are the two tools worth keeping in regular use.</div>
+
+<h2 id="caveats">12. The honest caveats</h2>
 <p>A few things to keep in mind so you read the numbers with the right amount of trust.</p>
 <p>Optimisers are very sensitive to the return guesses you feed them. Small changes in μ swing the
 recommended weights hard, which is why the trustworthy signal is the <em>direction</em> (you are
@@ -610,8 +688,14 @@ rising market.</p>
 from a handful of points. It still sits in your portfolio, just not in this analysis. And the whole
 thing assumes today's holdings were held throughout, since there is no trade history, so it is a
 "what your current basket would have done," not your exact past account.</p>
+<p>The Stage 6 methods carry their own assumptions, all editable in the notebook. The Black-Litterman
+<em>views</em> are illustrative ones I chose to mirror your trim signals — change them and the answer
+changes; that is the point of the model, not a flaw. The regime Monte Carlo uses a chosen crisis
+frequency and severity (10% of days, 2.5× volatility); the transaction costs are per-class estimates in
+basis points; and the bespoke scenarios are hand-set shocks, not forecasts. Treat them as a
+well-structured way to ask "what if," with the inputs on the table for you to argue with.</p>
 
-<h2 id="glossary">12. Glossary</h2>
+<h2 id="glossary">13. Glossary</h2>
 <table><thead><tr><th>Term</th><th>Plain meaning</th></tr></thead><tbody>
 <tr><td>Return</td><td>Percentage change in price from one day to the next.</td></tr>
 <tr><td>μ (mu)</td><td>Expected future return, one per holding.</td></tr>
@@ -648,6 +732,13 @@ thing assumes today's holdings were held throughout, since there is no trade his
 <tr><td>Drawdown duration</td><td>How long, not just how far, you stay below a previous peak.</td></tr>
 <tr><td>Black-Litterman</td><td>A method that blends your own views with the market's implied returns for steadier optimisation.</td></tr>
 <tr><td>CVaR optimisation</td><td>Optimising against the average tail loss instead of variance; better for fat-tailed books.</td></tr>
+<tr><td>Equilibrium return</td><td>The return an asset must earn to justify its weight in a reference (market) portfolio.</td></tr>
+<tr><td>View (Black-Litterman)</td><td>An explicit opinion you feed the model, e.g. "silver returns only 6%."</td></tr>
+<tr><td>Return attribution</td><td>Splitting a return into the contribution of each holding, or allocation vs selection.</td></tr>
+<tr><td>Allocation vs selection</td><td>Whether your edge came from what you held off-index, or from picking better names.</td></tr>
+<tr><td>Factor risk decomposition</td><td>Splitting your volatility into market, style and stock-specific sources.</td></tr>
+<tr><td>Regime-switching</td><td>A model that alternates between calm and crisis states; captures crashes a normal model misses.</td></tr>
+<tr><td>Turnover</td><td>How much of the portfolio you trade to reach a target; drives transaction costs.</td></tr>
 </tbody></table>
 """
 

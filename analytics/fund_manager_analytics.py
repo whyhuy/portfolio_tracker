@@ -660,3 +660,305 @@ ax.set_title("Distribution of 1-year outcomes — current vs optimised")
 ax.legend(); ax.grid(alpha=0.15)
 fig.tight_layout(); fig.savefig(OUT / "montecarlo_dist.png", dpi=130)
 print("\nSaved: montecarlo_fan.png, montecarlo_dist.png, stage5_montecarlo.csv")
+
+
+# %% [markdown]
+# ## Stage 6 — Advanced methods
+#
+# Seven upgrades a professional desk would add: (1) Black-Litterman returns, (2) CVaR / tail
+# optimisation, (3) return attribution, (4) a factor *risk* decomposition, (5) fat-tailed & regime
+# Monte Carlo, (6) transaction-cost & turnover modelling, and (7) liquidity + bespoke scenario stress.
+
+# %%
+# --- 6.1 Black-Litterman: blend market-implied (equilibrium) returns with your views ---
+TAU = 0.05
+mkt_var = (bench.std() * np.sqrt(TRADING_DAYS)) ** 2
+delta = erp_annual / mkt_var                                    # market price of risk (risk-aversion)
+Pi = delta * (Sig @ w_cur)                                      # equilibrium EXCESS returns implied by the current book
+
+aix = {a: i for i, a in enumerate(assets)}
+crypto_ix = [i for i, cl in enumerate(classes) if cl == "crypto"]
+# Views (illustrative — edit freely). They mirror the Stage 3 trim signals:
+#   V1: crypto sleeve total return only 8% (vs its high implied).   V2: MUFG (quality) beats crypto by 5%/yr.
+#   V3: silver's run is overdone — total return only 6%.
+views = []
+pv1 = np.zeros(n)
+for i in crypto_ix:
+    pv1[i] = 1.0 / len(crypto_ix)
+views.append((pv1, 0.08 - rf))                                 # excess-return view
+if "MUFG" in aix:
+    pv2 = np.zeros(n); pv2[aix["MUFG"]] = 1.0
+    for i in crypto_ix:
+        pv2[i] = -1.0 / len(crypto_ix)
+    views.append((pv2, 0.05))                                  # relative view (rf cancels)
+if "SLV" in aix:
+    pv3 = np.zeros(n); pv3[aix["SLV"]] = 1.0
+    views.append((pv3, 0.06 - rf))                             # silver haircut view
+P = np.array([v[0] for v in views]); Q = np.array([v[1] for v in views])
+
+Omega = np.diag(np.diag(P @ (TAU * Sig) @ P.T))               # He-Litterman view uncertainty
+tauSig_inv = np.linalg.inv(TAU * Sig)
+M_bl = np.linalg.inv(tauSig_inv + P.T @ np.linalg.inv(Omega) @ P)
+mu_bl_excess = M_bl @ (tauSig_inv @ Pi + P.T @ np.linalg.inv(Omega) @ Q)
+mu_bl = mu_bl_excess + rf                                      # posterior TOTAL expected returns
+
+
+def max_sharpe_w(mu_v):
+    f = lambda w: -((mu_v @ w - rf) / np.sqrt(w @ Sig @ w))
+    return minimize(f, w0, method="SLSQP", bounds=bounds, constraints=cons_full, options=OPTS).x
+
+
+w_bl = max_sharpe_w(mu_bl); w_bl[np.abs(w_bl) < 1e-5] = 0.0
+hhi_ms, hhi_bl = float(np.sum(w_ms ** 2)), float(np.sum(w_bl ** 2))
+print("\n=== 6.1 Black-Litterman ===")
+print(f"  risk-aversion delta {delta:.1f} | {len(views)} views | tau {TAU}")
+print(f"  optimiser concentration (HHI): CAPM max-Sharpe {hhi_ms:.3f} (eff {1/hhi_ms:.1f}) -> "
+      f"Black-Litterman {hhi_bl:.3f} (eff {1/hhi_bl:.1f})")
+bl_tab = pd.DataFrame({"equilibrium_excess": Pi + rf, "CAPM_mu": mu_vec, "BL_mu": mu_bl,
+                       "w_capm_opt": w_ms, "w_BL_opt": w_bl}, index=assets)
+print((bl_tab.sort_values("w_BL_opt", ascending=False).head(8) * 100).round(1).to_string())
+bl_tab.to_csv(OUT / "stage6_blacklitterman.csv")
+
+x = np.arange(n); bw = 0.27
+order = np.argsort(-w_cur)
+fig, ax = plt.subplots(figsize=(11, 4))
+ax.bar(x - bw, w_cur[order] * 100, bw, label="Current", color="#f87171")
+ax.bar(x, w_ms[order] * 100, bw, label="Max-Sharpe (CAPM μ)", color="#34d399")
+ax.bar(x + bw, w_bl[order] * 100, bw, label="Max-Sharpe (Black-Litterman μ)", color="#6366f1")
+ax.set_xticks(x, [assets[i][:8] for i in order], rotation=90, fontsize=7)
+ax.set_ylabel("weight (%)"); ax.set_title("Black-Litterman moderates the optimiser's weights")
+ax.legend(); ax.grid(axis="y", alpha=0.15)
+fig.tight_layout(); fig.savefig(OUT / "adv_bl.png", dpi=130)
+
+# %%
+# --- 6.2 CVaR (expected-shortfall) optimisation — minimise the fat left tail, not variance ---
+from scipy.optimize import linprog
+
+A_CVAR = 0.95
+Rmat = rets.values                                            # (T, n) daily scenarios
+Tn = Rmat.shape[0]
+c_lp = np.concatenate([np.zeros(n), [1.0], np.ones(Tn) / ((1 - A_CVAR) * Tn)])
+A1 = np.hstack([-Rmat, -np.ones((Tn, 1)), -np.eye(Tn)]); b1 = np.zeros(Tn)   # u_t >= -r_t·w - zeta
+a_cr = np.zeros(n + 1 + Tn); a_cr[np.where(is_crypto)[0]] = 1.0              # crypto sleeve cap
+A_ub = np.vstack([A1, a_cr]); b_ub = np.concatenate([b1, [CRYPTO_CAP]])
+A_eq = np.concatenate([np.ones(n), [0.0], np.zeros(Tn)]).reshape(1, -1); b_eq = [1.0]
+bnds = [(0, POS_CAP)] * n + [(None, None)] + [(0, None)] * Tn
+res = linprog(c_lp, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bnds, method="highs")
+w_cvar = np.clip(res.x[:n], 0, None); w_cvar = w_cvar / w_cvar.sum(); w_cvar[np.abs(w_cvar) < 1e-5] = 0.0
+
+
+def daily_es(w, a=A_CVAR):
+    pnl = Rmat @ w
+    return float(-pnl[pnl <= np.percentile(pnl, (1 - a) * 100)].mean())
+
+
+print("\n=== 6.2 CVaR (tail) optimisation ===")
+print(f"  daily 95% Expected Shortfall:  current {daily_es(w_cur):.2%} | min-variance {daily_es(w_mv):.2%} | "
+      f"min-CVaR {daily_es(w_cvar):.2%}")
+print(f"  min-CVaR exp.return {p_ret(w_cvar):.1%} vol {p_vol(w_cvar):.1%} sharpe {p_sharpe(w_cvar):.2f} | "
+      f"crypto weight {w_cvar[is_crypto].sum():.1%}")
+cvar_cmp = pd.DataFrame({"current": w_cur, "min_var": w_mv, "min_cvar": w_cvar}, index=assets)
+cvar_cmp.to_csv(OUT / "stage6_cvar_weights.csv")
+
+fig, ax = plt.subplots(figsize=(7, 3.4))
+labs = ["Current", "Min-variance", "Min-CVaR"]; es_vals = [daily_es(w_cur) * 100, daily_es(w_mv) * 100, daily_es(w_cvar) * 100]
+ax.bar(labs, es_vals, color=["#f87171", "#60a5fa", "#34d399"])
+for i, v in enumerate(es_vals):
+    ax.text(i, v, f"{v:.2f}%", ha="center", va="bottom", fontsize=9)
+ax.set_ylabel("daily 95% Expected Shortfall (%)"); ax.set_title("Tail loss: CVaR optimisation vs variance")
+ax.grid(axis="y", alpha=0.15)
+fig.tight_layout(); fig.savefig(OUT / "adv_cvar.png", dpi=130)
+
+# %%
+# --- 6.3 Return attribution: what drove the +return, and allocation vs selection ---
+asset_cum = (1 + rets).prod().values - 1                      # per-position cumulative return over the window
+contrib = pd.Series(w_cur * asset_cum, index=assets)          # contribution (constant-weight approx)
+port_cum = float((1 + pr).prod() - 1)
+contrib_by_class = contrib.groupby(classes).sum()
+
+eqlike = ~is_crypto
+w_eq, w_crsum = w_cur[eqlike].sum(), w_cur[is_crypto].sum()
+R_bench = float((1 + bench).prod() - 1)
+R_eq = float(asset_cum[eqlike] @ (w_cur[eqlike] / w_eq))
+R_cr = float(asset_cum[is_crypto] @ (w_cur[is_crypto] / w_crsum)) if w_crsum > 0 else 0.0
+alloc = w_crsum * (R_cr - R_bench)                            # the decision to hold crypto vs all-equity
+select = w_eq * (R_eq - R_bench)                              # equity stock-picking vs ACWI
+print("\n=== 6.3 Return attribution ===")
+print(f"  portfolio total return over window {port_cum:.0%} | top contributors (weight x return):")
+for a, v in contrib.sort_values(ascending=False).head(6).items():
+    print(f"    {a:20} {v:+.1%}")
+print(f"  By class: " + " | ".join(f"{k} {v:+.0%}" for k, v in contrib_by_class.items()))
+print(f"  Brinson (2-bucket vs ACWI {R_bench:.0%}): allocation (holding crypto) {alloc:+.0%} | "
+      f"selection (equity picks) {select:+.0%} | active {alloc + select:+.0%}")
+contrib.sort_values().to_csv(OUT / "stage6_attribution.csv")
+
+cc = contrib.sort_values()
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.barh(range(len(cc)), cc.values * 100, color=["#34d399" if v > 0 else "#f87171" for v in cc.values])
+ax.set_yticks(range(len(cc)), [t[:10] for t in cc.index], fontsize=7)
+ax.axvline(0, color="#475569", lw=0.8)
+ax.set_xlabel("contribution to total return (%)"); ax.set_title(f"Return attribution — what built the {port_cum:.0%}")
+ax.grid(axis="x", alpha=0.15)
+fig.tight_layout(); fig.savefig(OUT / "adv_attribution.png", dpi=130)
+
+# %%
+# --- 6.4 Factor RISK decomposition: which style bets drive your volatility (not just return) ---
+fbeta = coef[1:]                                             # portfolio factor betas (from Stage 4 regression)
+Fcov = factors.cov().values * TRADING_DAYS                  # annualised factor covariance
+y_var = float(np.var(yv) * TRADING_DAYS)                    # total (regression-sample) variance
+comp = fbeta * (Fcov @ fbeta)                               # component contribution per factor (sums to systematic var)
+fac_share = pd.Series(comp / y_var, index=factors.columns)
+spec_share = float(np.var(resid) * TRADING_DAYS / y_var)
+print("\n=== 6.4 Factor risk decomposition (% of variance) ===")
+for nm, s in fac_share.items():
+    print(f"  {nm:8} {s:+6.1%}")
+print(f"  {'Specific':8} {spec_share:6.1%}   (systematic {1 - spec_share:.0%} / specific {spec_share:.0%})")
+fac_share.to_csv(OUT / "stage6_factor_risk.csv")
+
+shares = list(fac_share.items()) + [("Specific", spec_share)]
+fig, ax = plt.subplots(figsize=(8, 3.6))
+ax.bar([s[0] for s in shares], [s[1] * 100 for s in shares],
+       color=["#6366f1"] * len(fac_share) + ["#94a3b8"])
+for i, s in enumerate(shares):
+    ax.text(i, s[1] * 100, f"{s[1]*100:.0f}%", ha="center", va="bottom", fontsize=8)
+ax.axhline(0, color="#475569", lw=0.8)
+ax.set_ylabel("% of portfolio variance"); ax.set_title("Factor risk decomposition — what drives your volatility")
+ax.grid(axis="y", alpha=0.15)
+fig.tight_layout(); fig.savefig(OUT / "adv_factor_risk.png", dpi=130)
+
+# %%
+# --- 6.5 Fat-tailed & regime Monte Carlo — crashes built in ---
+NU = 5
+
+
+def mc_t(w, n=N_SIMS, h=H, nu=NU):
+    mu_a, sig_a = p_ret(w), p_vol(w)
+    mu_d, sig_d = mu_a / TRADING_DAYS, sig_a / np.sqrt(TRADING_DAYS)
+    shock = rng.standard_t(nu, size=(n, h)) * sig_d * np.sqrt((nu - 2) / nu)   # rescaled to match vol
+    return np.exp(np.cumsum((mu_d - 0.5 * sig_d ** 2) + shock, axis=1))
+
+
+def mc_regime(w, n=N_SIMS, h=H, p_crisis=0.10, vol_mult=2.5, crisis_drift=-0.50):
+    mu_a, sig_a = p_ret(w), p_vol(w)
+    mu_d, sig_d = mu_a / TRADING_DAYS, sig_a / np.sqrt(TRADING_DAYS)
+    crisis = rng.random((n, h)) < p_crisis
+    sig = np.where(crisis, sig_d * vol_mult, sig_d)
+    drift = np.where(crisis, crisis_drift / TRADING_DAYS, mu_d)
+    return np.exp(np.cumsum(drift - 0.5 * sig ** 2 + rng.normal(0, 1, (n, h)) * sig, axis=1))
+
+
+paths_t, paths_reg = mc_t(w_cur), mc_regime(w_cur)
+mc_adv = pd.DataFrame([
+    summarise(paths_cur[:, -1], f"Normal (Stage 5)"),
+    summarise(paths_t[:, -1], f"Student-t (nu={NU})"),
+    summarise(paths_reg[:, -1], "Regime-switching (10% crisis)"),
+]).set_index("scenario")
+print("\n=== 6.5 Fat-tailed & regime Monte Carlo (1-year) ===")
+print(((mc_adv * 100).round(1).astype(str) + "%").to_string())
+mc_adv.to_csv(OUT / "stage6_montecarlo_fattail.csv")
+
+fig, ax = plt.subplots(figsize=(9, 4))
+for term, c, lab in [(paths_cur[:, -1], "#94a3b8", "Normal"), (paths_t[:, -1], "#6366f1", f"Student-t (ν={NU})"),
+                     (paths_reg[:, -1], "#f87171", "Regime-switching")]:
+    ax.hist((term - 1) * 100, bins=80, histtype="step", lw=1.8, color=c, label=lab, density=True)
+ax.axvline(0, color="#475569", lw=1)
+ax.set_xlabel("1-year return (%)"); ax.set_ylabel("density")
+ax.set_title("Fat-tailed & regime models give a heavier left tail than the normal")
+ax.legend(); ax.grid(alpha=0.15); ax.set_xlim(-80, 150)
+fig.tight_layout(); fig.savefig(OUT / "adv_montecarlo.png", dpi=130)
+
+# %%
+# --- 6.6 Transaction costs & turnover — the optimiser's edge, net of trading ---
+COST_BPS = {"equity": 15, "etf": 10, "fund": 20, "crypto": 40}   # round-trip cost per class (bps), editable
+bps_vec = np.array([COST_BPS.get(cl, 20) for cl in classes]) / 1e4
+
+
+def turnover(w_to, w_from=w_cur):
+    return float(np.sum(np.abs(w_to - w_from)))                  # two-way turnover
+
+
+def trade_cost(w_to, w_from=w_cur):
+    return float(np.sum(np.abs(w_to - w_from) * bps_vec))
+
+
+print("\n=== 6.6 Transaction costs & turnover ===")
+cost_rows = []
+for name, wt in [("Max-Sharpe", w_ms), ("Min-variance", w_mv), ("Min-CVaR", w_cvar), ("Black-Litterman", w_bl)]:
+    to, oneoff = turnover(wt), trade_cost(wt)
+    drag_q = oneoff * 4 if to > 0 else 0.0                       # rough annual drag if rebalanced quarterly at similar turnover
+    gross, net = p_ret(wt) - rf, (p_ret(wt) - rf) - drag_q
+    cost_rows.append((name, to, oneoff, drag_q, p_sharpe(wt), (net) / p_vol(wt)))
+    print(f"  {name:16} turnover {to*100:5.0f}% | one-off cost {oneoff*100:.2f}% (${oneoff*pv:,.0f}) | "
+          f"~quarterly drag {drag_q*100:.2f}%/yr | Sharpe {p_sharpe(wt):.2f} -> net {(net)/p_vol(wt):.2f}")
+cost_df = pd.DataFrame(cost_rows, columns=["target", "turnover", "oneoff_cost", "annual_drag", "sharpe_gross", "sharpe_net"]).set_index("target")
+cost_df.to_csv(OUT / "stage6_costs.csv")
+
+fig, ax = plt.subplots(figsize=(8, 3.6))
+xt = np.arange(len(cost_df))
+ax.bar(xt - 0.2, cost_df["turnover"] * 100, 0.4, label="turnover %", color="#60a5fa")
+ax.bar(xt + 0.2, cost_df["annual_drag"] * 100, 0.4, label="annual cost drag %", color="#f87171")
+ax.set_xticks(xt, cost_df.index, fontsize=8); ax.legend(); ax.grid(axis="y", alpha=0.15)
+ax.set_title("Cost of getting to each target (turnover & annual drag)")
+fig.tight_layout(); fig.savefig(OUT / "adv_costs.png", dpi=130)
+
+# %%
+# --- 6.7 Liquidity & bespoke scenario stress ---
+PARTICIP = 0.20                                               # assume you can be 20% of daily volume per day
+liq_names = [a for a, cl in zip(assets, classes) if cl in ("equity", "etf")]
+print("\n=== 6.7a Liquidity (days to exit at 20% of volume) ===")
+liq_rows = []
+try:
+    vd = yf.download(liq_names, period="3mo", auto_adjust=True, progress=False, threads=False)
+    advv = (vd["Close"] * vd["Volume"]).mean()               # avg daily $ volume per ticker
+    for a in liq_names:
+        adv = float(advv.get(a, np.nan))
+        pos = float(VALUE.get(a, 0.0))
+        days = pos / (PARTICIP * adv) if adv and adv > 0 else np.nan
+        liq_rows.append((a, pos, adv, days))
+    liq_df = pd.DataFrame(liq_rows, columns=["asset", "position_$", "adv_$", "days_to_exit"]).set_index("asset")
+    liq_df = liq_df.sort_values("days_to_exit", ascending=False)
+    print(liq_df.assign(adv_M=lambda d: (d["adv_$"] / 1e6).round(1),
+                        days=lambda d: d["days_to_exit"].round(3))[["position_$", "adv_M", "days"]].to_string())
+    print(f"  (crypto & the Syfe fund treated as same-day liquid; max single-name exit ~{liq_df['days_to_exit'].max():.2f} day)")
+    liq_df.to_csv(OUT / "stage6_liquidity.csv")
+except Exception as e:
+    print(f"  [liquidity fetch skipped: {e}]")
+
+beta_arr2 = pd.Series(betas).reindex(assets).values
+
+
+def stress2(market=0.0, crypto=0.0, commodity=0.0, growth_penalty=0.0):
+    pnl = 0.0
+    for a, wv, bt, cl in zip(assets, w_cur, beta_arr2, classes):
+        s = (bt * market if cl in ("equity", "etf", "fund") else 0.0)
+        s += crypto if cl == "crypto" else 0.0
+        s += commodity if a == "SLV" else 0.0
+        s += growth_penalty if (cl in ("equity", "etf") and bt > 1.2) else 0.0   # extra hit to high-beta growth
+        pnl += wv * s
+    return pnl
+
+
+scen2 = {
+    "US recession (eq −30%, crypto −60%)": dict(market=-0.30, crypto=-0.60),
+    "Rate spike +200bps (eq −10%, growth −8% extra)": dict(market=-0.10, growth_penalty=-0.08),
+    "Crypto winter (crypto −70%, eq −5%)": dict(crypto=-0.70, market=-0.05),
+    "Stagflation (eq −15%, crypto −40%, silver +25%)": dict(market=-0.15, crypto=-0.40, commodity=0.25),
+    "2008-style (eq −40%, crypto −70%, silver −20%)": dict(market=-0.40, crypto=-0.70, commodity=-0.20),
+}
+scen2_res = {k: stress2(**v) for k, v in scen2.items()}
+print("\n=== 6.7b Bespoke scenario stress (portfolio P&L) ===")
+for k, v in scen2_res.items():
+    print(f"  {k:46} {v*100:6.1f}%  (~${v*pv:,.0f})")
+pd.Series(scen2_res).to_csv(OUT / "stage6_scenarios.csv")
+
+fig, ax = plt.subplots(figsize=(9, 3.8))
+ks2 = list(scen2_res); vs2 = [scen2_res[k] * 100 for k in ks2]
+ax.barh(ks2, vs2, color="#f87171")
+for i, v in enumerate(vs2):
+    ax.text(v, i, f" {v:.0f}%  ${scen2_res[ks2[i]]*pv:,.0f}", va="center",
+            ha="right" if v < 0 else "left", color="#1e293b", fontsize=8)
+ax.axvline(0, color="#475569", lw=0.8); ax.set_title("Bespoke scenario stress — portfolio P&L")
+ax.grid(axis="x", alpha=0.15)
+fig.tight_layout(); fig.savefig(OUT / "adv_scenarios.png", dpi=130)
+print("\nSaved: adv_bl.png, adv_cvar.png, adv_attribution.png, adv_factor_risk.png, adv_montecarlo.png, "
+      "adv_costs.png, adv_scenarios.png + stage6_*.csv")
