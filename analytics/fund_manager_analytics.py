@@ -355,3 +355,168 @@ ax.grid(axis="x", alpha=0.15)
 fig.tight_layout()
 fig.savefig(OUT / "risk_addtrim.png", dpi=130)
 print(f"\nSaved: {OUT/'risk_addtrim.png'}, stage3_risk_decomposition.csv")
+
+
+# %% [markdown]
+# ## Stage 4 — Fund-manager analytics
+#
+# Risk metrics (VaR / Expected Shortfall, max drawdown / Calmar, Sortino), benchmark-relative stats
+# (β, tracking error, information ratio vs ACWI), concentration (HHI + look-through), style-factor
+# exposures (factor-ETF proxies for FF5+momentum, aligned to the same window), exposure by region
+# (Syfe fund decomposed), stress tests, and a constant-weight backtest of current vs optimised weights.
+
+# %%
+# --- portfolio daily returns (current weights, held constant = daily-rebalanced) ---
+pr = pd.Series(rets.values @ w_cur, index=rets.index)
+ann = TRADING_DAYS
+pv = val.sum()                                   # $ value of the analysed universe (ex SpaceX/cash)
+
+
+def max_drawdown(s):
+    cum = (1 + s).cumprod()
+    return float((cum / cum.cummax() - 1).min())
+
+
+cagr = float((1 + pr).prod() ** (ann / len(pr)) - 1)
+sd_p = pr.std() * np.sqrt(ann)
+downside = pr[pr < 0].std() * np.sqrt(ann)
+mdd = max_drawdown(pr)
+var95, var99 = -np.percentile(pr, 5), -np.percentile(pr, 1)
+es95 = -pr[pr <= np.percentile(pr, 5)].mean()
+es99 = -pr[pr <= np.percentile(pr, 1)].mean()
+
+metrics = {
+    "Ann. return (CAGR)": cagr, "Ann. volatility": sd_p,
+    "Sharpe": (cagr - rf) / sd_p, "Sortino": (cagr - rf) / downside,
+    "Max drawdown": mdd, "Calmar": cagr / abs(mdd),
+    "VaR 95% (1-day)": var95, "ES 95% (1-day)": es95,
+    "VaR 99% (1-day)": var99, "ES 99% (1-day)": es99,
+}
+print(f"=== Risk metrics — current portfolio, 3y daily (universe ~${pv:,.0f}) ===")
+for k, v in metrics.items():
+    tail = f"  (~${v * pv:,.0f})" if ("VaR" in k or "ES" in k) else ""
+    print(f"  {k:22} {v * 100:7.1f}%{tail}" if "Sharpe" not in k and "Sortino" not in k and "Calmar" not in k
+          else f"  {k:22} {v:7.2f}")
+
+# %%
+# --- vs benchmark (ACWI) ---
+bm = bench.reindex(pr.index)
+beta_p = float(np.cov(pr, bm)[0, 1] / bm.var())
+active = pr - bm
+te = active.std() * np.sqrt(ann)
+ir = (active.mean() * ann) / te
+print(f"\n=== Vs benchmark (ACWI) ===\n  Beta {beta_p:.2f} | Tracking error {te:.1%} | "
+      f"Information ratio {ir:.2f} | ann. active return {active.mean() * ann:+.1%}")
+
+# --- concentration (HHI) + look-through ---
+latest = json.loads((DATA / "latest.json").read_text())
+fund_members = {p["ticker"]: p["value_base"] for p in latest["positions"] if p.get("fund")}
+fsum = sum(fund_members.values())
+w_lt = {}
+for a, wv in zip(assets, w_cur):
+    if a == FUND_NAME:
+        for t, v in fund_members.items():
+            w_lt[t] = w_lt.get(t, 0) + wv * (v / fsum)
+    else:
+        w_lt[a] = w_lt.get(a, 0) + wv
+hhi, hhi_lt = float(np.sum(w_cur ** 2)), float(sum(v ** 2 for v in w_lt.values()))
+print(f"\n=== Concentration ===\n  HHI {hhi:.3f} (effective holdings {1/hhi:.1f}) | "
+      f"look-through HHI {hhi_lt:.3f} (effective {1/hhi_lt:.1f})")
+
+# %%
+# --- style-factor exposures (factor-ETF proxies for FF5 + momentum) ---
+def yf_rets(tickers, idx):
+    out = {}
+    for t in tickers:
+        s = yf.Ticker(t).history(start=idx.min() - pd.Timedelta(days=7), end=idx.max() + pd.Timedelta(days=2),
+                                 auto_adjust=True)["Close"]
+        s.index = pd.to_datetime(s.index).tz_localize(None).normalize()
+        out[t] = s.reindex(pd.bdate_range(s.index.min(), idx.max())).ffill().pct_change().reindex(idx)
+    return pd.DataFrame(out)
+
+
+fe = yf_rets(["ACWI", "IWM", "IWB", "IWD", "IWF", "MTUM", "QUAL"], pr.index)
+factors = pd.DataFrame({
+    "MKT": fe["ACWI"] - rf / ann, "SIZE": fe["IWM"] - fe["IWB"], "VALUE": fe["IWD"] - fe["IWF"],
+    "MOM": fe["MTUM"] - fe["IWB"], "QUALITY": fe["QUAL"] - fe["IWB"],
+}).dropna()
+yv = (pr - rf / ann).reindex(factors.index).values
+X = np.column_stack([np.ones(len(factors)), factors.values])
+coef, *_ = np.linalg.lstsq(X, yv, rcond=None)
+r2 = 1 - (yv - X @ coef).var() / yv.var()
+print("\n=== Style-factor exposures (β) ===")
+print(f"  alpha {coef[0] * ann:+.1%} (ann.)")
+for nm, b in zip(factors.columns, coef[1:]):
+    print(f"  {nm:8} {b:+.2f}")
+print(f"  R^2 {r2:.2f}")
+
+# %%
+# --- exposure by region (look-through on the fund) ---
+REGION = {"ORCL": "US", "MSTR": "US", "CEG": "US", "QBTS": "US", "IONQ": "US", "NNDM": "US",
+          "ORGN": "US", "MUFG": "Japan", "BZ": "China", "TMC": "Global", "VWO": "EM", "SLV": "Commodity",
+          "bitcoin": "Crypto", "ethereum": "Crypto", "crypto-com-chain": "Crypto", "solana": "Crypto",
+          "polkadot": "Crypto", "ripple": "Crypto"}
+FUND_REGION = {"CSPX.L": "US", "EFA": "DevExUS", "QQQ": "US", "XDEW.L": "US", "DUHP": "US",
+               "EIMI.L": "EM", "DFAT": "US", "MOAT": "US", "MCHI": "China", "KWEB": "China"}
+reg = {}
+for a, wv in zip(assets, w_cur):
+    if a == FUND_NAME:
+        for t, v in fund_members.items():
+            reg[FUND_REGION.get(t, "Other")] = reg.get(FUND_REGION.get(t, "Other"), 0) + wv * (v / fsum)
+    else:
+        reg[REGION.get(a, "Other")] = reg.get(REGION.get(a, "Other"), 0) + wv
+reg = pd.Series(reg).sort_values(ascending=False)
+print("\n=== Exposure by region (look-through, %) ===")
+print((reg * 100).round(1).to_string())
+
+# %%
+# --- stress tests (beta-propagated market shocks + direct crypto shocks) ---
+beta_arr = pd.Series(betas).reindex(assets).values
+def stress(market=0.0, crypto=0.0):
+    pnl = 0.0
+    for a, wv, b, cl in zip(assets, w_cur, beta_arr, classes):
+        s = (b * market if cl in ("equity", "etf", "fund") else 0.0) + (crypto if cl == "crypto" else 0.0)
+        pnl += wv * s
+    return pnl
+scenarios = {
+    "Global equity −20%": dict(market=-0.20),
+    "Crypto −50%": dict(crypto=-0.50),
+    "Risk-off (eq −15%, crypto −30%)": dict(market=-0.15, crypto=-0.30),
+    "Rates +100bps (eq −5%, crypto −10%)": dict(market=-0.05, crypto=-0.10),
+}
+stress_res = {k: stress(**v) for k, v in scenarios.items()}
+print("\n=== Stress tests (portfolio P&L; equity via empirical β) ===")
+for k, v in stress_res.items():
+    print(f"  {k:36} {v * 100:6.1f}%  (~${v * pv:,.0f})")
+
+# %%
+# --- charts: drawdown, stress, backtest ---
+cum = (1 + pr).cumprod()
+dd = cum / cum.cummax() - 1
+fig, ax = plt.subplots(figsize=(9, 3.2))
+ax.fill_between(dd.index, dd.values * 100, 0, color="#f87171", alpha=0.5)
+ax.set_title(f"Drawdown (underwater) — max {mdd:.0%}")
+ax.grid(alpha=0.15)
+fig.tight_layout(); fig.savefig(OUT / "drawdown.png", dpi=130)
+
+fig, ax = plt.subplots(figsize=(8, 3.6))
+ks = list(stress_res); vs = [stress_res[k] * 100 for k in ks]
+ax.barh(ks, vs, color="#f87171")
+for i, v in enumerate(vs):
+    ax.text(v / 2, i, f"{v:.0f}%  ${stress_res[ks[i]]*pv:,.0f}", va="center", ha="center", color="white", fontsize=8)
+ax.axvline(0, color="#94a3b8", lw=0.8); ax.set_title("Stress tests — portfolio P&L"); ax.grid(axis="x", alpha=0.15)
+fig.tight_layout(); fig.savefig(OUT / "stress_tests.png", dpi=130)
+
+bt = pd.DataFrame({"Current": rets.values @ w_cur, "Max-Sharpe": rets.values @ w_ms,
+                   "Min-variance": rets.values @ w_mv}, index=rets.index)
+bt = (1 + bt).cumprod()
+fig, ax = plt.subplots(figsize=(9, 5))
+for col, c in [("Current", "#f87171"), ("Max-Sharpe", "#34d399"), ("Min-variance", "#60a5fa")]:
+    ax.plot(bt.index, bt[col], label=f"{col}  ({(bt[col].iloc[-1]-1)*100:+.0f}%)", color=c, lw=1.6)
+ax.set_title("Backtest — constant weights, daily-rebalanced (gross of costs)")
+ax.legend(); ax.grid(alpha=0.15)
+fig.tight_layout(); fig.savefig(OUT / "backtest.png", dpi=130)
+print(f"\nSaved: drawdown.png, stress_tests.png, backtest.png")
+print("\n[note] Backtest is constant-weight & gross of costs; real rebalancing to the optimised weights "
+      "would incur turnover/transaction costs that shrink the optimised edge. Factors are tradeable-ETF "
+      "proxies for FF5+momentum, aligned to the same window.")
