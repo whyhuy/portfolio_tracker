@@ -87,6 +87,8 @@ piece from scratch.</p>
 <li><a href="#s2">Stage 2: the efficient frontier and the best mix</a></li>
 <li><a href="#s3">Stage 3: who is spending your risk budget</a></li>
 <li><a href="#s4">Stage 4: the professional risk metrics</a></li>
+<li><a href="#mc">Stage 5: Monte Carlo, your year ahead in 10,000 futures</a></li>
+<li><a href="#verdict">What it all means, and what to consider doing</a></li>
 <li><a href="#caveats">The honest caveats</a></li>
 <li><a href="#glossary">Glossary</a></li>
 </ol></div>
@@ -114,35 +116,52 @@ time) scales by \(\sqrt{252}\approx 15.9\):</p>
 return (called <span class="num">μ</span>, "mu"), and a measure of its risk and how it moves with
 everything else (the covariance matrix <span class="num">Σ</span>, "sigma"). This stage builds both.</p>
 
-<h3>Expected return, μ</h3>
-<p>μ is just a list, one expected yearly return per holding. The hard part is estimating it, because
-the past is a noisy guide to the future. The notebook computes three versions.</p>
+<h3>Expected return, μ: which method, and why</h3>
+<p>μ is just a list, one expected yearly return per holding. Estimating it is the hard part, because
+the past is a noisy guide to the future. The notebook computes three different estimates, but it does
+not use them equally.</p>
+<div class="box"><div class="h">Which method actually drives the analysis</div>
+Every forward-looking number in this report, the optimisation, the efficient frontier, and the Monte
+Carlo simulation, is driven by the <em>CAPM-implied</em> returns (method 2 below). The historical and
+shrinkage estimates are computed only so you can see how noisy the raw history is. Nothing downstream
+uses them.</div>
 
-<h4>Option A: the historical average (simple, but noisy)</h4>
-<p>Take each holding's average daily return over three years and annualise it. Easy, but it trusts
-the past far too much. Your quantum-computing stock QBTS averaged roughly <span class="num">+169%
-a year</span> over the window. Feeding that into an optimiser would make it scream "put everything
-in QBTS." That is noise, not a forecast.</p>
+<h4>Method 1: the historical average (computed, not used)</h4>
+<p>Take each holding's average daily return over three years and annualise it. Simple, but it trusts
+the past far too much. Your quantum stock QBTS averaged about <span class="num">+169% a year</span>
+over the window; your bioplastics stock ORGN about <span class="num">−85%</span>. Feed those into an
+optimiser and it piles into QBTS and refuses to touch ORGN, on the strength of three years of luck.
+That is noise, not a forecast, which is why we leave it out.</p>
 
-<h4>Option B: CAPM-implied (what we used)</h4>
-<p>The Capital Asset Pricing Model says an asset should earn the risk-free rate plus a reward for the
-market risk it carries. The reward is its <em>beta</em> times the market's excess return:</p>
+<h4>Method 2: CAPM-implied (this is the one we use)</h4>
+<p>The Capital Asset Pricing Model ties an asset's expected return to the one risk the market actually
+pays you for: how much it moves with the market as a whole. The formula is short.</p>
 \[ \mu_i = r_f + \beta_i\,(\mu_{\text{market}} - r_f) \]
-<p>Beta (\(\beta\)) is how much the asset moves when the market moves. You get it from a simple
-regression of the asset's returns on the market's returns: it is the slope of the best-fit line.
-Beta 1 means it moves with the market; beta 2 means it swings twice as hard; beta 0.5, half as hard.</p>
-<div class="box you"><div class="h">Worked example: your MSTR position</div>
-We used the global stock market (the ACWI index) as "the market." Over the window it returned about
-14.5% a year above cash, and cash (the risk-free rate \(r_f\)) is 4%. Your MicroStrategy holding has
-a beta of <span class="num">2.59</span> (it swings far harder than the market). So CAPM expects:
+<p>Read it as cash, plus your sensitivity to the market (\(\beta_i\)) times the market's reward for
+taking risk. Here is the exact four-step process the notebook runs:</p>
+<ol>
+<li>Pick the market. We use the global stock index ACWI as the stand-in for "the market."</li>
+<li>Measure each holding's beta. Beta comes from a linear regression of the holding's daily returns
+against the market's daily returns over the three years. The slope of that best-fit line is the beta.
+Beta 1 means it moves with the market; beta 2 swings twice as hard; beta 0.5, half as hard.</li>
+<li>Measure the market's reward (the equity risk premium): the market's own average return above cash
+over the window. Here that came to <span class="num">14.5%</span> a year.</li>
+<li>Combine. Plug beta and the premium into the formula, with cash at 4%.</li>
+</ol>
+<div class="box you"><div class="h">Worked example, end to end: your MSTR</div>
+Step 2 gives MicroStrategy a beta of <span class="num">2.59</span> (it swings far harder than the
+market). Step 3 gives a premium of 14.5%. Step 4:
 \[ \mu_{\text{MSTR}} = 4\% + 2.59\times 14.5\% = 41.7\% \]
-Compare the two methods on QBTS: history says +169% (nonsense), CAPM says a saner +51%. CAPM does not
-let one lucky stock hijack the whole analysis, which is exactly why we chose it.</div>
+The discipline shows on the wild names: history said QBTS would earn +169% a year, CAPM says a saner
+<span class="num">+51%</span>; history said ORGN would lose 85%, CAPM says <span class="num">+27%</span>.
+CAPM will not let one lucky or unlucky stretch hijack the forecast, because it forces every return to
+be justified by the holding's market risk, not its recent luck. That stability is what an optimiser
+needs.</div>
 
-<h4>Option C: shrinkage</h4>
-<p>A middle path: pull every holding's noisy historical average part-way toward the overall average.
-This "shrinks" the extreme guesses toward something more believable. We compute it for comparison but
-drive the optimiser with CAPM.</p>
+<h4>Method 3: shrinkage (computed, not used)</h4>
+<p>A halfway house: take the noisy historical averages and pull each one part-way toward the overall
+average, so the extremes calm down. Steadier than raw history, but still anchored to the past. We
+report it beside the others for comparison and leave it there.</p>
 
 <h3>Risk, the covariance matrix Σ</h3>
 <p>Risk is not one number per holding. Two things matter: how much each holding bounces on its own,
@@ -331,7 +350,74 @@ going forward. Over a boom, more risk wins. The optimiser is a risk-management t
 crystal ball or a promise of higher returns. Whether the next three years reward risk the way the last
 three did is the actual bet you are making.</div>
 
-<h2 id="caveats">6. The honest caveats</h2>
+<h2 id="mc">6. Stage 5: Monte Carlo, your year ahead in 10,000 futures</h2>
+<p>Every number so far is a single best estimate. Monte Carlo asks a different question: given those
+estimates, what is the whole <em>range</em> of where you could end up in a year? It rolls the dice
+10,000 times.</p>
+<h4>The method</h4>
+<p>For each of 10,000 simulated years, it draws a random return for every trading day and compounds
+them into a final value. The dice are loaded by your inputs: the average drift comes from the CAPM
+expected return, and the size and correlation of the random shocks come from the Ledoit-Wolf Σ. This
+is geometric Brownian motion, the standard model for asset paths. A second version resamples actual
+historical days (a "bootstrap"), which keeps real-world fat tails but replays the recent boom.</p>
+{{IMG:montecarlo_fan.png|10,000 simulated one-year paths. The dark line is the median outcome; the bands show the middle 50% and the middle 90% of futures. The cone widens because uncertainty compounds over time.}}
+<p>Reading the fan: starting near $50,500, the typical (median) year ends around
+<span class="num">$60,500</span> (+20%). The spread is wide. The worst 5% of years end below about
+<span class="num">$42,700</span> (−15%, roughly −$7,900), and the best 5% above
+<span class="num">$85,900</span> (+70%).</p>
+{{IMG:montecarlo_dist.png|The 10,000 final outcomes as a histogram, your current mix (red) against the optimised max-Sharpe mix (green). Bars to the left of zero are losing years.}}
+<div class="box you"><div class="h">What the dice say</div>
+On forward assumptions your current book has about a <span class="num">20%</span> chance of ending the
+year down, with a bad-case loss near −$7,900. The optimised mix (green) has a thinner left tail: the
+chance of a down year falls to about <span class="num">16%</span> and the bad case to −11%, for a
+similar typical return. That is the whole case for optimising, fewer ugly years for the same expected
+reward. The rosier bootstrap result (only a 7% chance of loss) just assumes the next year looks like
+the last three, so treat it as the optimistic bookend, not the base case.</div>
+
+<h2 id="verdict">7. What it all means, and what to consider doing</h2>
+<p>Here is the plain-English "so what" for each measure, then a short list of options your numbers
+point to. None of this is advice; it is what the analysis suggests, and the decisions are yours.</p>
+<h3>What each number implies for you</h3>
+<table><thead><tr><th>Measure</th><th>Your number</th><th>What it means for you</th></tr></thead><tbody>
+<tr><td>Sharpe ratio</td><td>0.76 (0.90 reachable)</td><td>A fair reward for your risk, but you are leaving some on the table; the same risk could earn more.</td></tr>
+<tr><td>Sortino ratio</td><td>2.19</td><td>Much of your "risk" is upside surprise, not real pain. Your downside is well paid.</td></tr>
+<tr><td>Max drawdown / Calmar</td><td>−18% / 1.91</td><td>Be ready to see the book ~18% below a peak, maybe more ahead. The reward for that pain is healthy.</td></tr>
+<tr><td>VaR 99%, one day</td><td>−$1,650</td><td>On a 1-in-100 bad day you could drop about $1,650. Make sure that never forces a panic sale.</td></tr>
+<tr><td>Expected Shortfall 99%</td><td>−$2,370</td><td>When a bad day does land, the average is worse than VaR alone. The tail bites harder than it looks.</td></tr>
+<tr><td>Beta vs world stocks</td><td>1.09</td><td>You fall slightly more than global equities in a sell-off, not less.</td></tr>
+<tr><td>Tracking error</td><td>13.1%</td><td>You stray a long way from a plain index. You are making active bets, for better or worse.</td></tr>
+<tr><td>Information ratio</td><td>1.02</td><td>Those bets paid off over the window. That is history, not a promise.</td></tr>
+<tr><td>Concentration (HHI)</td><td>3.1 (12.1 look-through)</td><td>The real concentration is half your money in one product. The fund diversifies inside, so the fix is to not let it grow, not to panic.</td></tr>
+<tr><td>Factor tilt</td><td>small-cap, low quality</td><td>You are making a speculative bet. In a flight to safety this profile tends to lag.</td></tr>
+<tr><td>Equity −20% stress</td><td>−$8,800</td><td>A normal-sized bad market costs you roughly this. Size positions so it does not derail your plan.</td></tr>
+<tr><td>Monte Carlo chance of loss</td><td>~20% (bad case −$7,900)</td><td>About a 1-in-5 chance of a down year. Decide now whether you can sit through that calmly.</td></tr>
+</tbody></table>
+
+<h3>Options the analysis points to</h3>
+<p>Three independent methods, the optimiser, the risk decomposition, and the simulation, agree on the
+same handful of moves. In rough priority:</p>
+<ol>
+<li>Trim your two biggest risk hogs, Bitcoin and silver. Stage 3 shows both use more of your risk
+budget than they return. They are the clearest "too much risk for the reward" positions.</li>
+<li>Shrink the crypto sleeve. You hold about 16%; the optimiser wants nearer 3%, and the six coins are
+so correlated (the red block in the heatmap) that they behave like one bet, not six.</li>
+<li>Do not let the Syfe fund grow past a level you are comfortable with. At 53% it is a single-product
+dependence. It is a good, efficient holding, so this is about concentration, not quality.</li>
+<li>Add the cheap diversifiers the optimiser favours: emerging markets (VWO), the Japanese bank (MUFG),
+and some higher-quality names. They lift your Sharpe and soften the speculative, low-quality tilt.</li>
+<li>Match the risk to your stomach. The simulation puts roughly a 1-in-5 chance on a down year and a
+−$8,000 bad case. If that is fine, your aggressive book is a coherent bet that the boom continues. If
+it is not, move toward the optimised mix, which trades a little expected return for far fewer bad
+years.</li>
+</ol>
+<div class="box warn"><div class="h">The honest tension, and a disclaimer</div>
+Over the last three years your riskier current book (+155%) beat the optimised one (+123%), because the
+optimiser trims exactly the crypto and silver that soared. The optimiser lowers risk; it does not
+promise higher returns. So the real decision is your own view on whether the next few years reward risk
+the way the last few did. And to be clear: this is analysis, not financial advice. I am not a licensed
+adviser, and every decision here is yours to make.</div>
+
+<h2 id="caveats">8. The honest caveats</h2>
 <p>A few things to keep in mind so you read the numbers with the right amount of trust.</p>
 <p>Optimisers are very sensitive to the return guesses you feed them. Small changes in μ swing the
 recommended weights hard, which is why the trustworthy signal is the <em>direction</em> (you are
@@ -344,7 +430,7 @@ from a handful of points. It still sits in your portfolio, just not in this anal
 thing assumes today's holdings were held throughout, since there is no trade history, so it is a
 "what your current basket would have done," not your exact past account.</p>
 
-<h2 id="glossary">7. Glossary</h2>
+<h2 id="glossary">9. Glossary</h2>
 <table><thead><tr><th>Term</th><th>Plain meaning</th></tr></thead><tbody>
 <tr><td>Return</td><td>Percentage change in price from one day to the next.</td></tr>
 <tr><td>μ (mu)</td><td>Expected future return, one per holding.</td></tr>
