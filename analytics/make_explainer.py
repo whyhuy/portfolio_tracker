@@ -82,6 +82,7 @@ piece from scratch.</p>
 
 <div class="toc"><strong>Contents</strong>
 <ol>
+<li><a href="#exante">How to read these numbers: ex-ante vs ex-post</a></li>
 <li><a href="#raw">The raw material: returns</a></li>
 <li><a href="#s1">Stage 1: expected return (μ) and risk (Σ)</a></li>
 <li><a href="#s2">Stage 2: the efficient frontier and the best mix</a></li>
@@ -92,6 +93,34 @@ piece from scratch.</p>
 <li><a href="#caveats">The honest caveats</a></li>
 <li><a href="#glossary">Glossary</a></li>
 </ol></div>
+
+<h2 id="exante">How to read these numbers: ex-ante vs ex-post</h2>
+<p>One distinction shapes how you read everything below. Some numbers look <em>forward</em> (ex-ante):
+forecasts and decisions about what to expect or do next. Others look <em>backward</em> (ex-post): a
+record of what actually happened. Mixing them up is the most common way to misread a portfolio report.</p>
+<p>A few inputs sit in between: they are <em>measured</em> from the past but <em>used</em> for the
+future. Risk and correlation are far steadier over time than returns, so estimating them from history
+and projecting them forward is reasonable. Returns are not steady, which is exactly why we forecast
+them with CAPM rather than trusting the past.</p>
+<table><thead><tr><th>Number</th><th>Looking</th><th>What it is for</th></tr></thead><tbody>
+<tr><td>CAPM expected returns (μ)</td><td>Ex-ante</td><td>The forward return forecast that drives every decision.</td></tr>
+<tr><td>Optimisation: frontier, max-Sharpe weights, expected Sharpe</td><td>Ex-ante</td><td>What mix to hold next, and the risk and return you expect from it.</td></tr>
+<tr><td>Risk decomposition (MCR, marginal Sharpe, add/trim)</td><td>Ex-ante</td><td>Which positions to scale up or down from here.</td></tr>
+<tr><td>Monte Carlo (parametric)</td><td>Ex-ante</td><td>The range of possible future outcomes, and the chance of a loss.</td></tr>
+<tr><td>Covariance Σ, volatility, correlation, beta</td><td>Measured ex-post, used ex-ante</td><td>The forward risk inputs: read from history, projected forward.</td></tr>
+<tr><td>Value at Risk, Expected Shortfall</td><td>Measured ex-post, used ex-ante</td><td>A forward loss budget, read off the past loss distribution.</td></tr>
+<tr><td>Realised return (CAGR), realised Sharpe, Sortino, Calmar</td><td>Ex-post</td><td>Your actual track record, and how the ride felt.</td></tr>
+<tr><td>Maximum drawdown</td><td>Ex-post</td><td>The worst peak-to-trough fall that actually happened.</td></tr>
+<tr><td>Beta, tracking error, information ratio vs ACWI</td><td>Ex-post</td><td>How you actually did against the benchmark.</td></tr>
+<tr><td>Factor exposures and R²</td><td>Ex-post</td><td>Which style bets actually drove your past returns.</td></tr>
+<tr><td>Backtest (current +155% vs optimised +123%)</td><td>Ex-post</td><td>How the mixes would have performed over the window.</td></tr>
+<tr><td>Historical-average μ, bootstrap simulation</td><td>Ex-post</td><td>Pure history, shown only for comparison.</td></tr>
+</tbody></table>
+<p>The cleanest example of the gap is the two Sharpe ratios. The ex-ante one (0.76) is a forecast for
+the mix you hold; the ex-post one (1.54) is what the ride actually delivered in a strong market. The
+backtest is pure ex-post: your current book beat the optimised one historically, even though the
+ex-ante optimiser expects the optimised one to do better from here. Neither is wrong; they answer
+different questions.</p>
 
 <h2 id="raw">1. The raw material: returns</h2>
 <p>Everything starts with the <em>return</em>, not the price. A price on its own (silver at $60)
