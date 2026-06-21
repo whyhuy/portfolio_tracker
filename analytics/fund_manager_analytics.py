@@ -520,3 +520,69 @@ print(f"\nSaved: drawdown.png, stress_tests.png, backtest.png")
 print("\n[note] Backtest is constant-weight & gross of costs; real rebalancing to the optimised weights "
       "would incur turnover/transaction costs that shrink the optimised edge. Factors are tradeable-ETF "
       "proxies for FF5+momentum, aligned to the same window.")
+
+
+# %% [markdown]
+# ## Stage 5 — Monte Carlo simulation
+#
+# 10,000 simulated one-year paths for the portfolio. The **parametric** method draws daily returns as
+# geometric Brownian motion from the forward CAPM μ and Ledoit-Wolf Σ; the **bootstrap** method
+# resamples actual historical days (keeps fat tails, but replays the bull market). The optimism of the
+# whole picture is set by the μ assumption — read it as "given these inputs," not a forecast.
+
+# %%
+rng = np.random.default_rng(7)
+N_SIMS, H = 10_000, TRADING_DAYS
+
+def mc_gbm(w, n=N_SIMS, h=H):
+    mu_a, sig_a = p_ret(w), p_vol(w)
+    mu_d, sig_d = mu_a / TRADING_DAYS, sig_a / np.sqrt(TRADING_DAYS)
+    logr = rng.normal(mu_d - 0.5 * sig_d ** 2, sig_d, size=(n, h))
+    return np.exp(np.cumsum(logr, axis=1))                 # value / start, shape (n, h)
+
+def mc_bootstrap(w, n=N_SIMS, h=H):
+    hist = rets.values @ w
+    return np.cumprod(1 + hist[rng.integers(0, len(hist), size=(n, h))], axis=1)
+
+def summarise(term, label):
+    return {"scenario": label, "median": np.median(term) - 1,
+            "p5 (bad)": np.percentile(term, 5) - 1, "p95 (good)": np.percentile(term, 95) - 1,
+            "P(loss)": np.mean(term < 1), "P(>+20%)": np.mean(term > 1.2),
+            "1y VaR95": 1 - np.percentile(term, 5)}
+
+paths_cur, paths_ms, boot_cur = mc_gbm(w_cur), mc_gbm(w_ms), mc_bootstrap(w_cur)
+mc_tab = pd.DataFrame([
+    summarise(paths_cur[:, -1], "Current (parametric)"),
+    summarise(boot_cur[:, -1], "Current (bootstrap)"),
+    summarise(paths_ms[:, -1], "Max-Sharpe (parametric)"),
+]).set_index("scenario")
+print("=== Monte Carlo — 1-year outcome distribution (10,000 paths) ===")
+print(((mc_tab * 100).round(1).astype(str) + "%").to_string())
+print(f"\nStart (analysed universe) ~${pv:,.0f} | current 1y median ~${np.median(paths_cur[:,-1])*pv:,.0f}"
+      f", bad case (5th pct) ~${np.percentile(paths_cur[:,-1],5)*pv:,.0f}"
+      f", good case (95th) ~${np.percentile(paths_cur[:,-1],95)*pv:,.0f}")
+mc_tab.to_csv(OUT / "stage5_montecarlo.csv")
+
+# %%
+months = np.arange(1, H + 1) / TRADING_DAYS * 12
+q = np.percentile(paths_cur, [5, 25, 50, 75, 95], axis=0) * pv
+fig, ax = plt.subplots(figsize=(9, 5))
+ax.fill_between(months, q[0], q[4], color="#6366f1", alpha=0.15, label="5–95%")
+ax.fill_between(months, q[1], q[3], color="#6366f1", alpha=0.30, label="25–75%")
+ax.plot(months, q[2], color="#4338ca", lw=2, label="median")
+ax.axhline(pv, color="#94a3b8", ls="--", lw=1, label="start")
+ax.set_xlabel("months ahead"); ax.set_ylabel("portfolio value ($)")
+ax.set_title("Monte Carlo — 10,000 one-year paths (current portfolio)")
+ax.legend(loc="upper left"); ax.grid(alpha=0.15)
+fig.tight_layout(); fig.savefig(OUT / "montecarlo_fan.png", dpi=130)
+
+# %%
+fig, ax = plt.subplots(figsize=(9, 5))
+ax.hist((paths_cur[:, -1] - 1) * 100, bins=70, color="#f87171", alpha=0.55, label="Current")
+ax.hist((paths_ms[:, -1] - 1) * 100, bins=70, color="#34d399", alpha=0.55, label="Max-Sharpe")
+ax.axvline(0, color="#475569", lw=1)
+ax.set_xlabel("1-year return (%)"); ax.set_ylabel("number of simulations")
+ax.set_title("Distribution of 1-year outcomes — current vs optimised")
+ax.legend(); ax.grid(alpha=0.15)
+fig.tight_layout(); fig.savefig(OUT / "montecarlo_dist.png", dpi=130)
+print("\nSaved: montecarlo_fan.png, montecarlo_dist.png, stage5_montecarlo.csv")
