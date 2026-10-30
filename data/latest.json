@@ -1,31 +1,31 @@
 {
-  "as_of": "2026-10-29T01:09:19.735993Z",
+  "as_of": "2026-10-30T01:16:30.931562Z",
   "base_currency": "USD",
   "totals": {
-    "USD": 50696.27,
-    "SGD": 64970.31,
-    "VND": 1310599972.04
+    "USD": 50325.52,
+    "SGD": 64316.52,
+    "VND": 1298348090.48
   },
   "pnl": {
     "base_currency": "USD",
-    "total_cost": 55401.92,
-    "total_value": 50696.27,
-    "total_gain_loss": -4705.65,
-    "total_gain_loss_pct": -8.49
+    "total_cost": 55496.85,
+    "total_value": 50325.52,
+    "total_gain_loss": -5171.33,
+    "total_gain_loss_pct": -9.32
   },
   "funds": [
     {
       "name": "Syfe Core Equity100",
-      "value": 26962.64,
-      "cost": 24345.33,
-      "gain_loss": 2617.31,
-      "gain_loss_pct": 10.75,
+      "value": 27019.84,
+      "cost": 24412.95,
+      "gain_loss": 2606.89,
+      "gain_loss_pct": 10.68,
       "holdings": 11
     }
   ],
   "fx": {
-    "USDSGD": 1.281559944152832,
-    "USDVND": 25852.0
+    "USDSGD": 1.2780100107192993,
+    "USDVND": 25799.0
   },
   "positions": [
     {
@@ -35,12 +35,12 @@
       "platform": "Crypto.com App",
       "fund": null,
       "quantity": 0.074389,
-      "price": 80905.0,
+      "price": 77121.0,
       "price_ccy": "USD",
-      "value_base": 6018.44,
-      "cost_base": 3311.04,
-      "gain_loss": 2707.4,
-      "gain_loss_pct": 81.77
+      "value_base": 5736.95,
+      "cost_base": 3320.24,
+      "gain_loss": 2416.71,
+      "gain_loss_pct": 72.79
     },
     {
       "ticker": "ethereum",
@@ -49,12 +49,12 @@
       "platform": "Crypto.com App",
       "fund": null,
       "quantity": 0.234,
-      "price": 2344.91,
+      "price": 2220.29,
       "price_ccy": "USD",
-      "value_base": 548.71,
-      "cost_base": 699.87,
-      "gain_loss": -151.16,
-      "gain_loss_pct": -21.6
+      "value_base": 519.55,
+      "cost_base": 701.81,
+      "gain_loss": -182.26,
+      "gain_loss_pct": -25.97
     },
     {
       "ticker": "crypto-com-chain",
@@ -63,12 +63,12 @@
       "platform": "Crypto.com App",
       "fund": null,
       "quantity": 9793.24,
-      "price": 0.053267,
+      "price": 0.050746,
       "price_ccy": "USD",
-      "value_base": 521.66,
-      "cost_base": 3961.43,
-      "gain_loss": -3439.78,
-      "gain_loss_pct": -86.83
+      "value_base": 496.97,
+      "cost_base": 3972.44,
+      "gain_loss": -3475.47,
+      "gain_loss_pct": -87.49
     },
     {
       "ticker": "ORCL",
@@ -77,12 +77,12 @@
       "platform": "Syfe Trade",
       "fund": null,
       "quantity": 8.5,
-      "price": 130.52999877929688,
+      "price": 144.5399932861328,
       "price_ccy": "USD",
-      "value_base": 1109.5,
+      "value_base": 1228.59,
       "cost_base": 1565.28,
-      "gain_loss": -455.77,
-      "gain_loss_pct": -29.12
+      "gain_loss": -336.69,
+      "gain_loss_pct": -21.51
     },
     {
       "ticker": "MSTR",
@@ -91,12 +91,12 @@
       "platform": "Syfe Trade",
       "fund": null,
       "quantity": 10.0,
-      "price": 141.39999389648438,
+      "price": 145.16000366210938,
       "price_ccy": "USD",
-      "value_base": 1414.0,
+      "value_base": 1451.6,
       "cost_base": 1350.0,
-      "gain_loss": 64.0,
-      "gain_loss_pct": 4.74
+      "gain_loss": 101.6,
+      "gain_loss_pct": 7.53
     },
     {
       "ticker": "TMC",
@@ -105,12 +105,12 @@
       "platform": "Syfe Trade",
       "fund": null,
       "quantity": 200.0,
-      "price": 2.75,
+      "price": 2.799999952316284,
       "price_ccy": "USD",
-      "value_base": 550.0,
+      "value_base": 560.0,
       "cost_base": 1030.0,
-      "gain_loss": -480.0,
-      "gain_loss_pct": -46.6
+      "gain_loss": -470.0,
+      "gain_loss_pct": -45.63
     },
     {
       "ticker": "SPCX",
@@ -119,12 +119,12 @@
       "platform": "Syfe Trade",
       "fund": null,
       "quantity": 6.0,
-      "price": 148.5800018310547,
+      "price": 145.22999572753906,
       "price_ccy": "USD",
-      "value_base": 891.48,
+      "value_base": 871.38,
       "cost_base": 942.0,
-      "gain_loss": -50.52,
-      "gain_loss_pct": -5.36
+      "gain_loss": -70.62,
+      "gain_loss_pct": -7.5
     },
     {
       "ticker": "CEG",
@@ -133,12 +133,12 @@
       "platform": "Syfe Trade",
       "fund": null,
       "quantity": 4.0,
-      "price": 258.9800109863281,
+      "price": 258.0799865722656,
       "price_ccy": "USD",
-      "value_base": 1035.92,
+      "value_base": 1032.32,
       "cost_base": 1052.0,
-      "gain_loss": -16.08,
-      "gain_loss_pct": -1.53
+      "gain_loss": -19.68,
+      "gain_loss_pct": -1.87
     },
     {
       "ticker": "QBTS",
@@ -147,12 +147,12 @@
       "platform": "Syfe Trade",
       "fund": null,
       "quantity": 30.0,
-      "price": 12.130000114440918,
+      "price": 11.770000457763672,
       "price_ccy": "USD",
-      "value_base": 363.9,
+      "value_base": 353.1,
       "cost_base": 728.7,
-      "gain_loss": -364.8,
-      "gain_loss_pct": -50.06
+      "gain_loss": -375.6,
+      "gain_loss_pct": -51.54
     },
     {
       "ticker": "IONQ",
@@ -161,12 +161,12 @@
       "platform": "Syfe Trade",
       "fund": null,
       "quantity": 12.0,
-      "price": 32.95000076293945,
+      "price": 32.43000030517578,
       "price_ccy": "USD",
-      "value_base": 395.4,
+      "value_base": 389.16,
       "cost_base": 711.6,
-      "gain_loss": -316.2,
-      "gain_loss_pct": -44.44
+      "gain_loss": -322.44,
+      "gain_loss_pct": -45.31
     },
     {
       "ticker": "MUFG",
@@ -175,12 +175,12 @@
       "platform": "Syfe Trade",
       "fund": null,
       "quantity": 6.0,
-      "price": 21.479999542236328,
+      "price": 21.459999084472656,
       "price_ccy": "USD",
-      "value_base": 128.88,
+      "value_base": 128.76,
       "cost_base": 120.06,
-      "gain_loss": 8.82,
-      "gain_loss_pct": 7.35
+      "gain_loss": 8.7,
+      "gain_loss_pct": 7.25
     },
     {
       "ticker": "NNDM",
@@ -189,12 +189,12 @@
       "platform": "Syfe Trade",
       "fund": null,
       "quantity": 200.0,
-      "price": 1.4299999475479126,
+      "price": 1.4199999570846558,
       "price_ccy": "USD",
-      "value_base": 286.0,
+      "value_base": 284.0,
       "cost_base": 354.0,
-      "gain_loss": -68.0,
-      "gain_loss_pct": -19.21
+      "gain_loss": -70.0,
+      "gain_loss_pct": -19.77
     },
     {
       "ticker": "ORGN",
@@ -217,12 +217,12 @@
       "platform": "Syfe Trade",
       "fund": null,
       "quantity": 3.0365,
-      "price": 16.649999618530273,
+      "price": 16.059999465942383,
       "price_ccy": "USD",
-      "value_base": 50.56,
+      "value_base": 48.77,
       "cost_base": 61.52,
-      "gain_loss": -10.96,
-      "gain_loss_pct": -17.82
+      "gain_loss": -12.75,
+      "gain_loss_pct": -20.73
     },
     {
       "ticker": "VWO",
@@ -231,12 +231,12 @@
       "platform": "Syfe Trade",
       "fund": null,
       "quantity": 15.0,
-      "price": 56.83000183105469,
+      "price": 57.02000045776367,
       "price_ccy": "USD",
-      "value_base": 852.45,
+      "value_base": 855.3,
       "cost_base": 896.1,
-      "gain_loss": -43.65,
-      "gain_loss_pct": -4.87
+      "gain_loss": -40.8,
+      "gain_loss_pct": -4.55
     },
     {
       "ticker": "SLV",
@@ -245,12 +245,12 @@
       "platform": "Syfe Trade",
       "fund": null,
       "quantity": 138.0,
-      "price": 49.15999984741211,
+      "price": 49.060001373291016,
       "price_ccy": "USD",
-      "value_base": 6784.08,
+      "value_base": 6770.28,
       "cost_base": 9602.04,
-      "gain_loss": -2817.96,
-      "gain_loss_pct": -29.35
+      "gain_loss": -2831.76,
+      "gain_loss_pct": -29.49
     },
     {
       "ticker": "solana",
@@ -259,12 +259,12 @@
       "platform": "Kraken",
       "fund": null,
       "quantity": 11.96383,
-      "price": 101.58,
+      "price": 94.55,
       "price_ccy": "USD",
-      "value_base": 1215.29,
+      "value_base": 1131.18,
       "cost_base": 1601.12,
-      "gain_loss": -385.83,
-      "gain_loss_pct": -24.1
+      "gain_loss": -469.94,
+      "gain_loss_pct": -29.35
     },
     {
       "ticker": "polkadot",
@@ -273,12 +273,12 @@
       "platform": "Kraken",
       "fund": null,
       "quantity": 49.6025,
-      "price": 1.004,
+      "price": 0.910798,
       "price_ccy": "USD",
-      "value_base": 49.8,
+      "value_base": 45.18,
       "cost_base": 1012.88,
-      "gain_loss": -963.08,
-      "gain_loss_pct": -95.08
+      "gain_loss": -967.71,
+      "gain_loss_pct": -95.54
     },
     {
       "ticker": "ripple",
@@ -287,12 +287,12 @@
       "platform": "Gemini",
       "fund": null,
       "quantity": 1149.6637,
-      "price": 1.32,
+      "price": 1.22,
       "price_ccy": "USD",
-      "value_base": 1517.56,
-      "cost_base": 1856.96,
-      "gain_loss": -339.4,
-      "gain_loss_pct": -18.28
+      "value_base": 1402.59,
+      "cost_base": 1862.12,
+      "gain_loss": -459.53,
+      "gain_loss_pct": -24.68
     },
     {
       "ticker": "CSPX.L",
@@ -301,9 +301,9 @@
       "platform": "Syfe Core Equity100",
       "fund": "Syfe Core Equity100",
       "quantity": 8.4,
-      "price": 833.7000122070312,
+      "price": 835.2899780273438,
       "price_ccy": "USD",
-      "value_base": 7003.08,
+      "value_base": 7016.44,
       "cost_base": null,
       "gain_loss": null,
       "gain_loss_pct": null
@@ -315,9 +315,9 @@
       "platform": "Syfe Core Equity100",
       "fund": "Syfe Core Equity100",
       "quantity": 55.19,
-      "price": 103.58999633789062,
+      "price": 103.68000030517578,
       "price_ccy": "USD",
-      "value_base": 5717.13,
+      "value_base": 5722.1,
       "cost_base": null,
       "gain_loss": null,
       "gain_loss_pct": null
@@ -329,9 +329,9 @@
       "platform": "Syfe Core Equity100",
       "fund": "Syfe Core Equity100",
       "quantity": 3.9,
-      "price": 721.25,
+      "price": 725.6099853515625,
       "price_ccy": "USD",
-      "value_base": 2812.88,
+      "value_base": 2829.88,
       "cost_base": null,
       "gain_loss": null,
       "gain_loss_pct": null
@@ -343,9 +343,9 @@
       "platform": "Syfe Core Equity100",
       "fund": "Syfe Core Equity100",
       "quantity": 23.23,
-      "price": 121.23999786376953,
+      "price": 121.41000366210938,
       "price_ccy": "USD",
-      "value_base": 2816.41,
+      "value_base": 2820.35,
       "cost_base": null,
       "gain_loss": null,
       "gain_loss_pct": null
@@ -357,9 +357,9 @@
       "platform": "Syfe Core Equity100",
       "fund": "Syfe Core Equity100",
       "quantity": 64.59,
-      "price": 42.58000183105469,
+      "price": 42.7400016784668,
       "price_ccy": "USD",
-      "value_base": 2750.24,
+      "value_base": 2760.58,
       "cost_base": null,
       "gain_loss": null,
       "gain_loss_pct": null
@@ -371,9 +371,9 @@
       "platform": "Syfe Core Equity100",
       "fund": "Syfe Core Equity100",
       "quantity": 27.4,
-      "price": 51.310001373291016,
+      "price": 51.86000061035156,
       "price_ccy": "USD",
-      "value_base": 1405.89,
+      "value_base": 1420.96,
       "cost_base": null,
       "gain_loss": null,
       "gain_loss_pct": null
@@ -385,9 +385,9 @@
       "platform": "Syfe Core Equity100",
       "fund": "Syfe Core Equity100",
       "quantity": 22.15,
-      "price": 69.43000030517578,
+      "price": 69.44000244140625,
       "price_ccy": "USD",
-      "value_base": 1537.87,
+      "value_base": 1538.1,
       "cost_base": null,
       "gain_loss": null,
       "gain_loss_pct": null
@@ -399,9 +399,9 @@
       "platform": "Syfe Core Equity100",
       "fund": "Syfe Core Equity100",
       "quantity": 12.13,
-      "price": 111.30999755859375,
+      "price": 110.91999816894531,
       "price_ccy": "USD",
-      "value_base": 1350.19,
+      "value_base": 1345.46,
       "cost_base": null,
       "gain_loss": null,
       "gain_loss_pct": null
@@ -413,9 +413,9 @@
       "platform": "Syfe Core Equity100",
       "fund": "Syfe Core Equity100",
       "quantity": 21.48,
-      "price": 49.08000183105469,
+      "price": 49.040000915527344,
       "price_ccy": "USD",
-      "value_base": 1054.24,
+      "value_base": 1053.38,
       "cost_base": null,
       "gain_loss": null,
       "gain_loss_pct": null
@@ -427,9 +427,9 @@
       "platform": "Syfe Core Equity100",
       "fund": "Syfe Core Equity100",
       "quantity": 17.42,
-      "price": 23.1299991607666,
+      "price": 22.989999771118164,
       "price_ccy": "USD",
-      "value_base": 402.92,
+      "value_base": 400.49,
       "cost_base": null,
       "gain_loss": null,
       "gain_loss_pct": null
@@ -443,7 +443,7 @@
       "quantity": 1.0,
       "price": 143.26,
       "price_ccy": "SGD",
-      "value_base": 111.79,
+      "value_base": 112.1,
       "cost_base": null,
       "gain_loss": null,
       "gain_loss_pct": null
