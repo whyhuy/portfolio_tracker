@@ -1,31 +1,31 @@
 {
-  "as_of": "2026-11-01T00:19:11.980449Z",
+  "as_of": "2026-11-02T00:58:40.433526Z",
   "base_currency": "USD",
   "totals": {
-    "USD": 49044.2,
-    "SGD": 62658.87,
-    "VND": 1265291315.8
+    "USD": 49078.71,
+    "SGD": 62752.04,
+    "VND": 1266328875.42
   },
   "pnl": {
     "base_currency": "USD",
-    "total_cost": 55507.85,
-    "total_value": 49044.2,
-    "total_gain_loss": -6463.65,
-    "total_gain_loss_pct": -11.64
+    "total_cost": 55481.05,
+    "total_value": 49078.71,
+    "total_gain_loss": -6402.34,
+    "total_gain_loss_pct": -11.54
   },
   "funds": [
     {
       "name": "Syfe Core Equity100",
-      "value": 26722.22,
-      "cost": 24420.79,
-      "gain_loss": 2301.43,
-      "gain_loss_pct": 9.42,
+      "value": 26722.13,
+      "cost": 24401.69,
+      "gain_loss": 2320.44,
+      "gain_loss_pct": 9.51,
       "holdings": 11
     }
   ],
   "fx": {
-    "USDSGD": 1.2776000499725342,
-    "USDVND": 25799.0
+    "USDSGD": 1.2785999774932861,
+    "USDVND": 25802.0
   },
   "positions": [
     {
@@ -35,12 +35,12 @@
       "platform": "Crypto.com App",
       "fund": null,
       "quantity": 0.074389,
-      "price": 77438.0,
+      "price": 78099.0,
       "price_ccy": "USD",
-      "value_base": 5760.54,
-      "cost_base": 3321.31,
-      "gain_loss": 2439.23,
-      "gain_loss_pct": 73.44
+      "value_base": 5809.71,
+      "cost_base": 3318.71,
+      "gain_loss": 2491.0,
+      "gain_loss_pct": 75.06
     },
     {
       "ticker": "ethereum",
@@ -49,12 +49,12 @@
       "platform": "Crypto.com App",
       "fund": null,
       "quantity": 0.234,
-      "price": 2254.37,
+      "price": 2269.66,
       "price_ccy": "USD",
-      "value_base": 527.52,
-      "cost_base": 702.04,
-      "gain_loss": -174.51,
-      "gain_loss_pct": -24.86
+      "value_base": 531.1,
+      "cost_base": 701.49,
+      "gain_loss": -170.39,
+      "gain_loss_pct": -24.29
     },
     {
       "ticker": "crypto-com-chain",
@@ -63,12 +63,12 @@
       "platform": "Crypto.com App",
       "fund": null,
       "quantity": 9793.24,
-      "price": 0.051345,
+      "price": 0.051172,
       "price_ccy": "USD",
-      "value_base": 502.83,
-      "cost_base": 3973.71,
-      "gain_loss": -3470.88,
-      "gain_loss_pct": -87.35
+      "value_base": 501.14,
+      "cost_base": 3970.61,
+      "gain_loss": -3469.47,
+      "gain_loss_pct": -87.38
     },
     {
       "ticker": "ORCL",
@@ -259,12 +259,12 @@
       "platform": "Kraken",
       "fund": null,
       "quantity": 11.96383,
-      "price": 95.33,
+      "price": 93.95,
       "price_ccy": "USD",
-      "value_base": 1140.51,
+      "value_base": 1124.0,
       "cost_base": 1601.12,
-      "gain_loss": -460.61,
-      "gain_loss_pct": -28.77
+      "gain_loss": -477.12,
+      "gain_loss_pct": -29.8
     },
     {
       "ticker": "polkadot",
@@ -273,11 +273,11 @@
       "platform": "Kraken",
       "fund": null,
       "quantity": 49.6025,
-      "price": 0.944765,
+      "price": 0.945691,
       "price_ccy": "USD",
-      "value_base": 46.86,
+      "value_base": 46.91,
       "cost_base": 1012.88,
-      "gain_loss": -966.02,
+      "gain_loss": -965.97,
       "gain_loss_pct": -95.37
     },
     {
@@ -290,9 +290,9 @@
       "price": 1.25,
       "price_ccy": "USD",
       "value_base": 1437.08,
-      "cost_base": 1862.71,
-      "gain_loss": -425.63,
-      "gain_loss_pct": -22.85
+      "cost_base": 1861.26,
+      "gain_loss": -424.18,
+      "gain_loss_pct": -22.79
     },
     {
       "ticker": "CSPX.L",
@@ -443,7 +443,7 @@
       "quantity": 1.0,
       "price": 143.26,
       "price_ccy": "SGD",
-      "value_base": 112.13,
+      "value_base": 112.04,
       "cost_base": null,
       "gain_loss": null,
       "gain_loss_pct": null
